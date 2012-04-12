@@ -54,6 +54,14 @@ class Controller:
         hash = self.putblob(blob.Blob.generate_from_type(0))
         self.propagate_up_the_tree(path + '/' + new_dir, hash)
 
+    def rm(self, path):
+        plist = filter(len, path.split('/'))
+        parent = "/".join(plist[0:len(plist)-1])
+        parent_hash = self.resolve(parent)
+        b = self.getblob(parent_hash)
+        del b.data["children"][plist[len(plist)-1]]
+        self.propagate_up_the_tree(parent, self.putblob(b))
+
     def ls(self, path):
         hash = self.resolve(path)
         path_blob = self.getblob(hash)

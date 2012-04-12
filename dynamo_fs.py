@@ -14,7 +14,7 @@ class DynamoFS:
         return file.File(filename, mode, self.cntl)
 
     def rm(self, filename):
-        pass
+        self.cntl.rm(filename)
 
     def mkdir(self, path, new_dir):
         self.cntl.mkdir(path, new_dir)

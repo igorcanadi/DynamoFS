@@ -13,9 +13,9 @@ def generate_root(server):
 if __name__ == '__main__':
     ss = server_stub.ServerStub('server_stub_backup.dat')
     dfs = dynamo_fs.DynamoFS(ss, 'fs_root.txt')
-    dfs.mkdir('/', 'test_dir')
-    dfs.mkdir('/', 'works')
-    dfs.mkdir('/test_dir', 'win')
+    #dfs.mkdir('/', 'test_dir')
+    #dfs.mkdir('/', 'works')
+    #dfs.mkdir('/test_dir', 'win')
     print dfs.ls('/test_dir')
     print dfs.ls('/')
     file = dfs.open('/test_dir/pas', 'w')
@@ -23,5 +23,7 @@ if __name__ == '__main__':
     print dfs.ls('/test_dir')
     file2 = dfs.open('/test_dir/pas', 'r')
     print file2.read()
+    dfs.rm('/test_dir/pas')
+    print dfs.ls('/test_dir')
 
 
