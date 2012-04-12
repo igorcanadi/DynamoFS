@@ -20,6 +20,7 @@ class DynamoFS:
     def rmdir(self, path):
         pass
 
-    def rename(self, filename, new_filename):
+    # Renames a file or directory.
+    def rename(self, old_name, new_name):
         pass
 
