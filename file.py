@@ -1,10 +1,19 @@
 class File:
-    def write(data):
+    filename = ""
+
+    def __init__(self, filename):
+
         pass
 
-    def read(data):
+    # in first iteration, we do only full-file writes
+    def write(self, data):
         pass
 
-    def seek(data):
+    # ...and reads
+    def read(self, data):
         pass
+
+    # ... so no seek for the first iteration
+    def seek(self, offset, whence):
+        raise NotImplementedError
 

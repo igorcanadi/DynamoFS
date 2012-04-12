@@ -1,8 +1,12 @@
 (dp1
 S'a'
 S'v'
-sS'74d3523bb4ad839dd9bac634ce2de0d25b84a8bf4c6a40960c33e76ba3940aa93b0483ce545319ff7539c92d44f5eecbb56001dbc3c9b9e095829216423f2b7f'
+sS'22785dc0e110d3e401b876d1db712a2c1d9aa93bb73d1d6e011b21ec37fe9402d684f2ed97307b313e8ae7339ddb89e381bfd026a198e06295073a1f4dc4c0bb'
 p2
-S"(idirectory_blob\nDirectoryBlob\np1\n(dp2\nS'reference_count'\np3\nI1\nsb."
+S'(igeneric_blob\nGenericBlob\np1\n(dp2\nS\'type\'\np3\nI0\nsS\'blob\'\np4\nS"(idirectory_blob\\nDirectoryBlob\\np1\\n(dp2\\nS\'reference_count\'\\np3\\nI1\\nsb."\np5\nsb.'
 p3
+sS'74d3523bb4ad839dd9bac634ce2de0d25b84a8bf4c6a40960c33e76ba3940aa93b0483ce545319ff7539c92d44f5eecbb56001dbc3c9b9e095829216423f2b7f'
+p4
+S"(idirectory_blob\nDirectoryBlob\np1\n(dp2\nS'reference_count'\np3\nI1\nsb."
+p5
 s.
