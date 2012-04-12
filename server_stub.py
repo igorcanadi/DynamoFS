@@ -1,7 +1,22 @@
+import cPickle
+
 class ServerStub:
     kvstore = dict()
-    def put(key, value):
+    backup_filename = ""
+
+    def __init__(self, backup_filename):
+        self.backup_filename = backup_filename
+        try:
+            self.kvstore = cPickle.load(open(backup_filename, 'r'))
+        except:
+            # in case no server stub backup
+            pass
+
+    def __del__(self):
+        cPickle.dump(self.kvstore, open(self.backup_filename, 'w'))
+
+    def put(self, key, value):
         self.kvstore[key] = value
 
-    def get(key):
+    def get(self, key):
         return self.kvstore[key]
