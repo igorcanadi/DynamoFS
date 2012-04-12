@@ -9,6 +9,12 @@ class Controller:
     def getblob(self, hash):
         return blob.Blob(self.server.get(hash))
 
+    # returns hash
+    def putblob(self, blob):
+        (hash, value) = blob.get_hash_and_blob()
+        self.server.put(hash, value)
+        return hash
+
     def update_root(self, new_root):
         self.root_hash = new_root
         open(self.root_filename, 'w').write(new_root)
@@ -45,9 +51,7 @@ class Controller:
         self.update_root(hash)
 
     def mkdir(self, path, new_dir):
-        b = blob.Blob.generate_from_type(0)
-        (hash, value) = b.get_hash_and_blob()
-        self.server.put(hash, value)
+        hash = self.putblob(blob.Blob.generate_from_type(0))
         self.propagate_up_the_tree(path + '/' + new_dir, hash)
 
     def ls(self, path):

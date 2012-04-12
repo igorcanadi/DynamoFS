@@ -18,4 +18,10 @@ if __name__ == '__main__':
     dfs.mkdir('/test_dir', 'win')
     print dfs.ls('/test_dir')
     print dfs.ls('/')
+    file = dfs.open('/test_dir/pas', 'w')
+    file.write('ja sam mali pas')
+    print dfs.ls('/test_dir')
+    file2 = dfs.open('/test_dir/pas', 'r')
+    print file2.read()
+
 

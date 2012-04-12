@@ -1,4 +1,5 @@
 import controller 
+import file
 
 class DynamoFS:
     root_filename = ""
@@ -10,7 +11,7 @@ class DynamoFS:
 
     # mode can be 'r' or 'w'
     def open(self, filename, mode):
-        pass
+        return file.File(filename, mode, self.cntl)
 
     def rm(self, filename):
         pass
