@@ -1,3 +1,4 @@
+# Represents a sequential-access file that has been opened.
 class File:
     filename = ""
 

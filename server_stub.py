@@ -1,5 +1,7 @@
 import cPickle
 
+# Stubs out DynamoDB functionality, using an in-memory dict that is pickled
+# for persistent storage.
 class ServerStub:
     kvstore = dict()
     backup_filename = ""

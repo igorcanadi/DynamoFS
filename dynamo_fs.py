@@ -68,6 +68,7 @@ class DynamoFS:
         path_blob = self.getblob(hash)
         return path_blob.data["children"].keys()
 
-    def rename(self, filename, new_filename):
+    # Renames a file or directory.
+    def rename(self, old_name, new_name):
         pass
 
