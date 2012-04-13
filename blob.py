@@ -74,6 +74,9 @@ def validate(fn):
     return wrapped
 
 class DirectoryBlob(Blob):
+    # DATATYPE is the type that the data is stored in for this class
+    DATATYPE = dict
+
     def __init__(self, key, cntl, parent = None):
         super(DirectoryBlob, self).__init__(self, key, cntl, parent)
 
@@ -93,7 +96,6 @@ class DirectoryBlob(Blob):
             raise TypeError()
         self.data[key] = value
 
-
     @dirties
     def __delitem__(self, key):
         """
@@ -105,7 +107,7 @@ class DirectoryBlob(Blob):
 
     def __del__(self):
         # TODO: flush if necessary (this will come into play when we start evicting
-        # items from cache
+        # items from cache)
         pass
 
     @property
@@ -114,7 +116,16 @@ class DirectoryBlob(Blob):
             self._data = dict()
         return self._data
 
+    @property.getter
+    def data(self, value):
+        if not isinstance(value, DirectoryBlob.DATATYPE):
+            raise TypeError()
+        self._data = value
+
 class BlockListBlob(Blob):
+    # DATATYPE is the type that the data is stored in for this class
+    DATATYPE = list
+
     def __init__(self, key, cntl, parent, valid = False):
         super(BlockListBlob, self).__init__(self, key, cntl, parent)
         self.valid = valid
@@ -123,8 +134,14 @@ class BlockListBlob(Blob):
     def __getitem__(self, item):
         if len(self.data) - 1 < item:
             # block list is too short; expand
-            self.blocks.extend([BlockBlob(None, cntl, self) for i in range(item - len(self.blocks) + 1)])
-            self.data.extend([None for i in range(item - len(self.blocks) + 1)])
+            self.blocks.extend([
+                BlockBlob(None, cntl, self, True)
+                    for i in range(item - len(self.blocks) + 1)
+            ])
+            self.data.extend([
+                None
+                    for i in range(item - len(self.blocks) + 1)
+            ])
         if self.blocks[item] == None:
             # fetch block
             self.blocks[item] = BlockBlob(self.data[item])
@@ -152,7 +169,16 @@ class BlockListBlob(Blob):
             self._data = list()
         return self._data
 
+    @property.getter
+    def data(self, value):
+        if not isinstance(value, BlockListBlob.DATATYPE):
+            raise TypeError()
+        self._data = value
+
 class BlockBlob(Blob):
+    # DATATYPE is the type that the data is stored in for this class
+    DATATYPE = array
+
     def __init__(self, key, cntl, parent):
         super(BlockBlob, self).__init__(self, key, cntl, parent)
 
@@ -160,7 +186,7 @@ class BlockBlob(Blob):
     def __getitem__(self, item):
         if len(self.data) - 1 < item:
             # block list is too short; expand
-            self.data.extend(bytearray(item - len(self.data) + 1))
+            self.data.extend([0 for i in range(item - len(self.data) + 1)])
         return self.data[item]
 
     @dirties
@@ -187,5 +213,11 @@ class BlockBlob(Blob):
         BlockBlob stores data locally as an array of bytes
         """
         if not hasattr(self, "_data"):
-            self._data = bytearray()
+            self._data = array('B')
         return self._data
+
+    @property.getter
+    def data(self, value):
+        if not isinstance(value, BlockBlob.DATATYPE):
+            raise TypeError()
+        self._data = value
