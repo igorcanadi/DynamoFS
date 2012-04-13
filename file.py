@@ -26,7 +26,7 @@ class File:
             chks = [data[i:i+PAGE_SIZE] for i in range(0, len(data), PAGE_SIZE)]
             blocks = map(self.create_block, chks)
             block_hashes = map(self.cntl.putblob, blocks)
-            block = self.create_indirect_block(block_hashes)
+            block = self.create_indirect_block(block_hashes) # TODO make tree of indirect blocks if the file is really big
         else:
             block = self.create_block(data)
         hash = self.cntl.putblob(block)
