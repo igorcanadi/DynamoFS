@@ -31,7 +31,8 @@ class Blob(object):
     def recursiveFlush(self):
         if self.dirty:
             self.flush()
-            self.parent.recursiveFlush()
+            if not self.parent == None:
+                self.parent.recursiveFlush()
 
     @property
     def valid(self):
@@ -77,8 +78,8 @@ class DirectoryBlob(Blob):
     # DATATYPE is the type that the data is stored in for this class
     DATATYPE = dict
 
-    def __init__(self, key, cntl, parent = None):
-        super(DirectoryBlob, self).__init__(self, key, cntl, parent)
+    def __init__(self, key, cntl, parent = None, valid = False):
+        super(DirectoryBlob, self).__init__(self, key, cntl, parent, valid)
 
     @validate
     def __getitem__(self, item):
@@ -127,8 +128,7 @@ class BlockListBlob(Blob):
     DATATYPE = list
 
     def __init__(self, key, cntl, parent, valid = False):
-        super(BlockListBlob, self).__init__(self, key, cntl, parent)
-        self.valid = valid
+        super(BlockListBlob, self).__init__(self, key, cntl, parent, valid)
 
     @validate
     def __getitem__(self, item):
@@ -179,8 +179,8 @@ class BlockBlob(Blob):
     # DATATYPE is the type that the data is stored in for this class
     DATATYPE = array
 
-    def __init__(self, key, cntl, parent):
-        super(BlockBlob, self).__init__(self, key, cntl, parent)
+    def __init__(self, key, cntl, parent, valid = False):
+        super(BlockBlob, self).__init__(self, key, cntl, parent, valid)
 
     @validate
     def __getitem__(self, item):
