@@ -5,7 +5,7 @@ import hashlib
 
 class Blob(object):
     def __init__(self, key, cntl, parent, valid = False):
-        self.key = key
+        self._key = key
         self.valid = valid
         self.dirty = True
         self.cntl = cntl
@@ -14,18 +14,20 @@ class Blob(object):
     # returns (hash, blob)
     def get_hash_and_blob(self, c):
         cp = cPickle.dumps((c, self.serializable_data()))
-        self.key = hashlib.sha512(cp).hexdigest()
-        return (self.key, cp)
+        self._key = hashlib.sha512(cp).hexdigest()
+        return (self._key, cp)
 
     def flushSelfOnly(self):
         if self.dirty:
             self.key = self.cntl.putdata(self)
+        self.dirty = False
 
     def flush(self):
         if self.dirty:
-            self.key = self.cntl.putdata(self)
+            self._key = self.cntl.putdata(self)
             if not self.parent == None:
                 self.parent.flush()
+        self.dirty = False
 
     @property
     def invalid(self):
@@ -47,6 +49,11 @@ class Blob(object):
         """
         self._data = data.fromstring()
 
+    @property
+    def key(self):
+        self._key, _ = self.get_hash_and_blob(self.__class__)
+        return self._key
+
 def dirties(fn):
     """
     This decorator marks a function as one that causes this blob to become dirty. It will take care of marking the blob
@@ -64,7 +71,7 @@ def validate(fn):
     """
     def wrapped(self, *args, **kwargs):
         if self.invalid:
-            deserialize_data(self.cntl.getdata(self.key)[1])
+            self.deserialize_data(self.cntl.getdata(self.key)[1])
         self.valid = True
         return fn(self, *args, **kwargs)
     return wrapped
@@ -75,27 +82,31 @@ class DirectoryBlob(Blob):
 
     def __init__(self, key, cntl, parent = None, valid = False):
         super(DirectoryBlob, self).__init__(key, cntl, parent, valid)
+        self.items = dict()
 
     @validate
-    def __getitem__(self, item):
+    def __getitem__(self, filename):
         """
         Returns the blob associated with key
         """
-        if not isinstance(item, str):
-            raise TypeError()
-        itemclass, itemHash = self.data[item]
-        return itemclass(itemHash, self.cntl, self)
+        if not isinstance(filename, str):
+            raise TypeError("item was of type %s, expected %s" % (type(filename), str))
+        if filename not in self.items:
+            itemclass, itemHash = self.data[filename]
+            self.items[filename] = itemclass(itemHash, self.cntl, self)
+        return self.items[filename]
 
     @dirties
-    def __setitem__(self, key, value):
+    def __setitem__(self, filename, blob):
         """
         Sets directory or filename key to point to blob value
         """
-        if not isinstance(key, str):
-            raise TypeError()
-        if not isinstance(value, DirectoryBlob) and not isinstance(value, BlockListBlob):
-            raise TypeError()
-        self.data[key] = (value.__class__, value)
+        if not isinstance(filename, str):
+            raise TypeError("key was of type %s, expected %s" % (type(filename), str))
+        if not isinstance(blob, DirectoryBlob) and not isinstance(blob, BlockListBlob):
+            raise TypeError("key was of type %s, expected %s or %s" % (type(filename), DirectoryBlob, BlockListBlob))
+        self.items[filename] = blob
+        self.data[filename] = (blob.__class__, blob.key)
 
     @dirties
     def __delitem__(self, key):
@@ -108,7 +119,7 @@ class DirectoryBlob(Blob):
     def __del__(self):
         # TODO: flush if necessary (this will come into play when we start evicting
         # items from cache)
-        raise NotImplementedError()
+        pass
 
     def keys(self):
         return self.data.keys()

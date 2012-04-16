@@ -5,12 +5,6 @@ import blob
 import hashlib
 import cPickle
 
-def generate_root(cntl):
-    b = blob.DirectoryBlob(None, cntl, None, True)
-    b.flush()
-    open('fs_root.txt', 'w').write(b.key)
-    return b
-
 if __name__ == '__main__':
     ss = server_stub.ServerStub('server_stub_backup.dat')
     dfs = dynamo_fs.DynamoFS(ss, 'fs_root.txt')

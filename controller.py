@@ -1,13 +1,24 @@
 import blob
 
+def generate_root(cntl):
+    b = blob.DirectoryBlob(None, cntl, None, True)
+    b.flush()
+    open('fs_root.txt', 'w').write(b.key)
+    return b
+
 class Controller:
     def __init__(self, server, root_filename):
         self.server = server
         self.root_filename = root_filename
         try:
             self.root_hash = open(root_filename, 'r').read().split('\n')[0]
+            b = self.server.get(self.root_hash)
+            self.root = b
         except IOError, e:
-            pass
+            b = generate_root(self)
+            self.root_hash = b.key
+            self.server.put(self.root_hash, b)
+            self.root = b
 
     def getdata(self, hash):
         return self.server.get(hash)

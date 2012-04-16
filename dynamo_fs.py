@@ -12,7 +12,7 @@ class DynamoFS:
 
     def _find_leaf(self, path):
         # look up parent
-        current = self.root
+        current = self.cntl.root
         plist = filter(len, path.split('/'))
         for elem in plist:
             current = current[elem]
