@@ -1,0 +1,35 @@
+body {
+   font-family: Verdana, Arial, Helvetica, sans-serif;
+   font-size: 12px;
+   color: #000;
+}
+
+h1 {
+   font-size: 28px;
+   font-weight: bold;
+   color: #c60;
+   margin-bottom: 15px;
+   padding-bottom: 5px;
+}
+
+h2 {
+   font-size: 18px;
+   font-weight: bold;
+   color: #c60;
+   margin-top: 15px;
+   padding-bottom: 10px;
+}
+
+h3 {
+   font-size: 15px;
+   font-weight: bold;
+   color: #c60;
+   margin-top: 15px;
+}
+
+h4 {
+   font-size: 12px;
+   font-weight: normal;
+   color: #c60;
+   margin-top: 15px;
+}
