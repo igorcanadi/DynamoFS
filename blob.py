@@ -220,7 +220,6 @@ class BlockBlob(Blob):
         # TODO: flush if necessary
         pass
 
-    @property
     def getdata(self):
         """
         BlockBlob stores data locally as an array of bytes
