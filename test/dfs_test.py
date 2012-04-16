@@ -33,6 +33,17 @@ class MkdirLsTestCase(BasicTest):
         self.assertEqual(self.dfs.ls('/test_dir/win'), ['lose'])
 
 class OpenWriteTestCase(MkdirLsTestCase):
+    writtenString = "Hello, world!"
+    filename = "/test_dir/my_file"
     def runTest(self):
         super(OpenWriteTestCase, self).runTest()
-        self.dfs.open("/test_dir/my_file", "w")
+        somefile = self.dfs.open(OpenWriteTestCase.filename, "w")
+        somefile.write(OpenWriteTestCase.writtenString)
+        somefile.close()
+
+class OpenReadTestCase(OpenWriteTestCase):
+    def runTest(self):
+        super(OpenReadTestCase, self).runTest()
+        somefile = self.dfs.open(OpenWriteTestCase.filename, "r")
+        self.assertEqual(somefile.read(), OpenWriteTestCase.writtenString)
+        somefile.close()

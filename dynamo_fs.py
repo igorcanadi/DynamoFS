@@ -2,6 +2,9 @@ import blob
 import controller
 import file
 
+def _get_plist(path):
+    return filter(len, path.split('/'))
+
 class DynamoFS:
     root_filename = ""
     root_hash = ""
@@ -10,20 +13,17 @@ class DynamoFS:
     def __init__(self, server, root_filename):
         self.cntl = controller.Controller(server, root_filename)
 
-    def _get_plist(path):
-        return filter(len, path.split('/'))
-
     def _find_leaf(self, path):
         # look up parent
         current = self.cntl.root
-        plist = DynamoFS._get_plist(path)
+        plist = _get_plist(path)
         for elem in plist:
             current = current[elem]
         return current
 
     # mode can be 'r' or 'w'
     def open(self, filename, mode):
-        plist = DynamoFS._get_plist(filename)
+        plist = _get_plist(filename)
         parent = self._find_leaf('/'.join(plist[:-1]))
         # TODO: finish
 
