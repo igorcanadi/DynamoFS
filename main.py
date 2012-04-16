@@ -1,29 +1,26 @@
+from controller import Controller
 import dynamo_fs
 import server_stub
 import blob 
 import hashlib
 import cPickle
 
-def generate_root(server):
-    b = blob.Blob.generate_from_type(0)
-    (h, b) = b.get_hash_and_blob()
-    ss.put(h, b)
-    open('fs_root.txt', 'w').write(h)
+def generate_root(cntl):
+    b = blob.DirectoryBlob(None, cntl, None, True)
+    b.flush()
+    open('fs_root.txt', 'w').write(b.key)
+    return b
 
 if __name__ == '__main__':
     ss = server_stub.ServerStub('server_stub_backup.dat')
     dfs = dynamo_fs.DynamoFS(ss, 'fs_root.txt')
-    #dfs.mkdir('/', 'test_dir')
-    #dfs.mkdir('/', 'works')
-    #dfs.mkdir('/test_dir', 'win')
+    dfs.root = generate_root(dfs.cntl)
+    dfs.mkdir('/', 'test_dir')
+    dfs.mkdir('/', 'works')
+    dfs.mkdir('/test_dir', 'win')
     print dfs.ls('/test_dir')
     print dfs.ls('/')
-    file = dfs.open('/test_dir/pas', 'w')
-    file.write('ja sam mali pas')
     print dfs.ls('/test_dir')
-    file2 = dfs.open('/test_dir/pas', 'r')
-    print file2.read()
-    dfs.rm('/test_dir/pas')
     print dfs.ls('/test_dir')
 
 

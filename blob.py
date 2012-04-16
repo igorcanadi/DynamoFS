@@ -1,66 +1,61 @@
-""" 
-Type 0 - Directory Blob
-     data = {"children": {...}}
-Type 1 - Block List Blob
-     data = {"blocks": [...]}
-Type 2 - Block Blob
-     data = {"data": "..."}
-"""
 from array import array
 
 import cPickle
 import hashlib
 
 class Blob(object):
-    def __init__(self, key, cntl, parent):
+    def __init__(self, key, cntl, parent, valid = False):
         self.key = key
-        self.valid = False
+        self.valid = valid
         self.dirty = True
         self.cntl = cntl
         self.parent = parent
 
     # returns (hash, blob)
     def get_hash_and_blob(self, c):
-        cp = cPickle.dumps((c, self.data))
-        return (hashlib.sha512(cp).hexdigest(), cp)
+        cp = cPickle.dumps((c, self.serializable_data()))
+        self.key = hashlib.sha512(cp).hexdigest()
+        return (self.key, cp)
+
+    def flushSelfOnly(self):
+        if self.dirty:
+            self.key = self.cntl.putdata(self)
 
     def flush(self):
         if self.dirty:
-            cntl.put(self)
-
-    def recursiveFlush(self):
-        if self.dirty:
-            self.flush()
+            self.key = self.cntl.putdata(self)
             if not self.parent == None:
-                self.parent.recursiveFlush()
-
-    @property
-    def valid(self):
-        return self.valid
+                self.parent.flush()
 
     @property
     def invalid(self):
         return not self.valid
 
     @property
-    def dirty(self):
-        return self.dirty
-
-    @property
     def clean(self):
         return not self.dirty
 
+    def serializable_data(self):
+        """
+        Override this method if the data format can't be serialized by cPickle normally.
+        """
+        return self.data
+
+    def deserialize_data(self, data):
+        """
+        Override this method if the data attribute cannot be serialized by cPickle normally
+        """
+        self._data = data.fromstring()
 
 def dirties(fn):
     """
-    This decorate marks a function as one that causes this blob to become dirty. It will take care of marking the blob
+    This decorator marks a function as one that causes this blob to become dirty. It will take care of marking the blob
     as dirty upon entry.
     """
     def wrapped(self, *args, **kwargs):
         self.dirty = True
-        return fn(*args, **kwargs)
+        return fn(self, *args, **kwargs)
     return wrapped
-
 
 def validate(fn):
     """
@@ -69,9 +64,9 @@ def validate(fn):
     """
     def wrapped(self, *args, **kwargs):
         if self.invalid:
-            self.cntl.getblob(self.key)
+            deserialize_data(self.cntl.getdata(self.key)[1])
         self.valid = True
-        return fn(*args, **kwargs)
+        return fn(self, *args, **kwargs)
     return wrapped
 
 class DirectoryBlob(Blob):
@@ -79,49 +74,56 @@ class DirectoryBlob(Blob):
     DATATYPE = dict
 
     def __init__(self, key, cntl, parent = None, valid = False):
-        super(DirectoryBlob, self).__init__(self, key, cntl, parent, valid)
+        super(DirectoryBlob, self).__init__(key, cntl, parent, valid)
 
     @validate
     def __getitem__(self, item):
         """
         Returns the blob associated with key
         """
-        return self.cntl.getblob(self.data[item])
+        if not isinstance(item, str):
+            raise TypeError()
+        itemclass, itemHash = self.data[item]
+        return itemclass(itemHash, self.cntl, self)
 
     @dirties
     def __setitem__(self, key, value):
         """
         Sets directory or filename key to point to blob value
         """
-        if not isinstance(value, Blob):
+        if not isinstance(key, str):
             raise TypeError()
-        self.data[key] = value
+        if not isinstance(value, DirectoryBlob) and not isinstance(value, BlockListBlob):
+            raise TypeError()
+        self.data[key] = (value.__class__, value)
 
     @dirties
     def __delitem__(self, key):
         """
         Deletes child from this directory.
         """
-        # TODO: decrement reference count of deleted object
-        # TODO: undirty child so it doesn't flush unnecessarily (??? not sure)
-        del self.data[key]
+        # TODO: implement
+        raise NotImplementedError()
 
     def __del__(self):
         # TODO: flush if necessary (this will come into play when we start evicting
         # items from cache)
-        pass
+        raise NotImplementedError()
 
-    @property
-    def data(self):
+    def keys(self):
+        return self.data.keys()
+
+    def getdata(self):
         if not hasattr(self, "_data"):
             self._data = dict()
         return self._data
 
-    @property.getter
-    def data(self, value):
+    def setdata(self, value):
         if not isinstance(value, DirectoryBlob.DATATYPE):
             raise TypeError()
         self._data = value
+
+    data = property(getdata, setdata)
 
 class BlockListBlob(Blob):
     # DATATYPE is the type that the data is stored in for this class
@@ -163,17 +165,17 @@ class BlockListBlob(Blob):
         # TODO: flush if necessary
         pass
 
-    @property
-    def data(self):
+    def getdata(self):
         if not hasattr(self, "_data"):
             self._data = list()
         return self._data
 
-    @property.getter
-    def data(self, value):
+    def setdata(self, value):
         if not isinstance(value, BlockListBlob.DATATYPE):
             raise TypeError()
         self._data = value
+
+    data = property(getdata, setdata)
 
 class BlockBlob(Blob):
     # DATATYPE is the type that the data is stored in for this class
@@ -185,6 +187,7 @@ class BlockBlob(Blob):
     @validate
     def __getitem__(self, item):
         if len(self.data) - 1 < item:
+            # TODO: should this actually raise an IndexOutOfBounds exception?
             # block list is too short; expand
             self.data.extend([0 for i in range(item - len(self.data) + 1)])
         return self.data[item]
@@ -194,21 +197,20 @@ class BlockBlob(Blob):
         if not isinstance(value, Blob):
             raise TypeError()
         # TODO: add self to parent's dirty list
-        self.blocks[key] = value
+        self.data[key] = value
 
     @dirties
     def __delitem__(self, key):
         # TODO: decrement reference count of deleted object
         # TODO: add self to parent's dirty list
         del self.data[key]
-        del self.blocks[key]
 
     def __del__(self):
         # TODO: flush if necessary
         pass
 
     @property
-    def data(self):
+    def getdata(self):
         """
         BlockBlob stores data locally as an array of bytes
         """
@@ -216,8 +218,15 @@ class BlockBlob(Blob):
             self._data = array('B')
         return self._data
 
-    @property.getter
-    def data(self, value):
+    def setdata(self, value):
         if not isinstance(value, BlockBlob.DATATYPE):
             raise TypeError()
         self._data = value
+
+    data = property(getdata, setdata)
+
+    def serializable_data(self):
+        return self.data.tostring()
+
+    def deserialize_data(self, data):
+        self.data = data.fromstring()
