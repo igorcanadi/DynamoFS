@@ -10,20 +10,26 @@ class DynamoFS:
     def __init__(self, server, root_filename):
         self.cntl = controller.Controller(server, root_filename)
 
+    def _get_plist(path):
+        return filter(len, path.split('/'))
+
     def _find_leaf(self, path):
         # look up parent
         current = self.cntl.root
-        plist = filter(len, path.split('/'))
+        plist = DynamoFS._get_plist(path)
         for elem in plist:
             current = current[elem]
         return current
 
     # mode can be 'r' or 'w'
     def open(self, filename, mode):
-        return file.File(filename, mode, self.cntl)
+        plist = DynamoFS._get_plist(filename)
+        parent = self._find_leaf('/'.join(plist[:-1]))
+        # TODO: finish
 
     def rm(self, filename):
-        self.cntl.rm(filename)
+        target = self._find_leaf(filename)
+        del target.parent[target]
 
     def mkdir(self, path, new_dir):
         # TODO: add error checking
