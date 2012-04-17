@@ -1,13 +1,13 @@
 import cPickle
-import hashlib
+import hash
 
 # Simple backend that just uses an in-memory dict object, backed by a local file.
 class DictBackend:
-    # backup_filename is a local file where this dict will persist itself.
-    def __init__(self, backup_filename):
-        self.backup_filename = backup_filename
+    # filename is a local file where this dict will persist itself.
+    def __init__(self, filename):
+        self.filename = filename
         try:
-            self.kvstore = cPickle.load(open(backup_filename, 'r'))
+            self.kvstore = cPickle.load(open(filename, 'r'))
         except:
             # The file failed to load, so just start with an empty dict.
             self.kvstore = dict()
@@ -15,11 +15,10 @@ class DictBackend:
 
     def __del__(self):
         # Persist the dictionary.
-        cPickle.dump(self.kvstore, open(self.backup_filename, 'w'))
+        cPickle.dump(self.kvstore, open(self.filename, 'w'))
 
     def put(self, value):
-        # Generate a key by hashing the value.
-        key = hashlib.sha512(value).hexdigest()
+        key = hash.generateKey(value)
         self.kvstore[key] = value
         self.incRefCount(key)
 
