@@ -1,12 +1,12 @@
 from controller import Controller
 import dynamo_fs
-import server_stub
+import dict_backend
 import blob 
 import hashlib
 import cPickle
 
 if __name__ == '__main__':
-    ss = server_stub.ServerStub('server_stub_backup.dat')
+    ss = dict_backend.DictBackend('server_stub_backup.dat')
     dfs = dynamo_fs.DynamoFS(ss, 'fs_root.txt')
     dfs.mkdir('/', 'test_dir')
     dfs.mkdir('/', 'works')

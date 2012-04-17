@@ -1,5 +1,5 @@
 import dynamo_fs
-import server_stub
+import dict_backend 
 
 __author__ = 'jpaton'
 
@@ -10,7 +10,7 @@ class BasicTest(unittest.TestCase):
     rootFilename = 'test/data/fs_root.txt'
 
     def setUp(self):
-        self.ss = server_stub.ServerStub(MkdirLsTestCase.serverBackupFilename)
+        self.ss = dict_backend.DictBackend(MkdirLsTestCase.serverBackupFilename)
         self.dfs = dynamo_fs.DynamoFS(self.ss, MkdirLsTestCase.rootFilename)
 
     def tearDown(self):
