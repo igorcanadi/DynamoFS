@@ -2,7 +2,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import hash
 
 # Construct the ORM for the SQLite database.
 Base = declarative_base()
@@ -43,9 +42,7 @@ class SQLiteBackend:
     def getDatum(self, key):
         return self.session.query(Datum).filter_by(key=key).first()
 
-    def put(self, value):
-        key = hash.generateKey(value)
-        
+    def put(self, key, value):
         # Query the datum, if it already exists.
         datum = self.getDatum(key)
         if datum is None:
