@@ -25,7 +25,7 @@ class DynamoFS:
     def open(self, filename, mode):
         plist = _get_plist(filename)
         parent = self._find_leaf('/'.join(plist[:-1]))
-        # TODO: finish
+        return file.File(plist[-1], mode, self.cntl, parent)
 
     def rm(self, filename):
         target = self._find_leaf(filename)
