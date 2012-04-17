@@ -59,7 +59,7 @@ class SQLiteBackend:
     def get(self, key):
         datum = self.getDatum(key)
         if datum is None:
-            return None
+            raise KeyError
         else:
             return datum.value
 
