@@ -92,6 +92,7 @@ class DirectoryBlob(Blob):
         """
         if not isinstance(filename, str):
             raise TypeError("item was of type %s, expected %s" % (type(filename), str))
+        # TODO (jim) if it's not there, raise an error, don't create
         if filename not in self.items:
             itemclass, itemHash = self.data[filename]
             self.items[filename] = itemclass(itemHash, self.cntl, self)
@@ -142,7 +143,8 @@ class BlockListBlob(Blob):
     DATATYPE = list
 
     def __init__(self, key, cntl, parent, valid = False):
-        super(BlockListBlob, self).__init__(self, key, cntl, parent, valid)
+        super(BlockListBlob, self).__init__(key, cntl, parent, valid)
+        self.blocks = list()
 
     @validate
     def __getitem__(self, item):
@@ -151,7 +153,7 @@ class BlockListBlob(Blob):
             # block list is too short; expand
             isBlockValid = True
             self.blocks.extend([
-                BlockBlob(None, cntl, self, True)
+                BlockBlob(None, self.cntl, self, True)
                     for i in range(item - len(self.blocks) + 1)
             ])
             self.data.extend([
@@ -196,7 +198,7 @@ class BlockBlob(Blob):
     DATATYPE = array
 
     def __init__(self, key, cntl, parent, valid = False):
-        super(BlockBlob, self).__init__(self, key, cntl, parent, valid)
+        super(BlockBlob, self).__init__(key, cntl, parent, valid)
 
     @validate
     def __getitem__(self, item):

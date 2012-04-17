@@ -1,0 +1,5 @@
+glob:.pydevproject
+syntax: glob
+.project
+*.pyc
+test/data/*
