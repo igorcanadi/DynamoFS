@@ -1,5 +1,5 @@
 import cPickle
-import hash
+import key_hash
 
 # Simple backend that just uses an in-memory dict object, backed by a local file.
 class DictBackend:
@@ -18,7 +18,7 @@ class DictBackend:
         cPickle.dump(self.kvstore, open(self.filename, 'w'))
 
     def put(self, value):
-        key = hash.generateKey(value)
+        key = key_hash.generateKey(value)
         self.kvstore[key] = value
         self.incRefCount(key)
 
