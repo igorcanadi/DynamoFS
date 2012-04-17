@@ -14,7 +14,7 @@ class Controller:
             self.root_hash = open(root_filename, 'r').read().split('\n')[0]
             b = self.server.get(self.root_hash)
             self.root = b
-        except IOError, e:
+        except (KeyError, IOError), e:
             b = generate_root(self)
             self.root_hash = b.key
             self.server.put(self.root_hash, b)
