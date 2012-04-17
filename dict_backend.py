@@ -17,8 +17,7 @@ class DictBackend:
         # Persist the dictionary.
         cPickle.dump(self.kvstore, open(self.filename, 'w'))
 
-    def put(self, value):
-        key = key_hash.generateKey(value)
+    def put(self, key, value):
         self.kvstore[key] = value
         self.incRefCount(key)
 
