@@ -73,6 +73,7 @@ def validate(fn):
         if self.invalid:
             self.deserialize_data(self.cntl.getdata(self.key)[1])
         self.valid = True
+        self.dirty = False
         return fn(self, *args, **kwargs)
     return wrapped
 
@@ -145,8 +146,10 @@ class BlockListBlob(Blob):
 
     @validate
     def __getitem__(self, item):
+        isBlockValid = False
         if len(self.data) - 1 < item:
             # block list is too short; expand
+            isBlockValid = True
             self.blocks.extend([
                 BlockBlob(None, cntl, self, True)
                     for i in range(item - len(self.blocks) + 1)
@@ -157,7 +160,7 @@ class BlockListBlob(Blob):
             ])
         if self.blocks[item] == None:
             # fetch block
-            self.blocks[item] = BlockBlob(self.data[item])
+            self.blocks[item] = BlockBlob(self.data[item], self.cntl, self, isBlockValid)
         return self.blocks[item]
 
     @dirties

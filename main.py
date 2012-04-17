@@ -1,4 +1,4 @@
-from controller import Controller
+from controller import Controller, generate_root
 import dynamo_fs
 import server_stub
 import blob 
