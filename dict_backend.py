@@ -1,6 +1,12 @@
 import cPickle
 import key_hash
 
+# Tuple stored in the dict.
+class Datum:
+    def __init__(self, value):
+        self.value = value
+        self.refCount = 1
+
 # Simple backend that just uses an in-memory dict object, backed by a local file.
 class DictBackend:
     # filename is a local file where this dict will persist itself.
@@ -18,14 +24,19 @@ class DictBackend:
         cPickle.dump(self.kvstore, open(self.filename, 'w'))
 
     def put(self, key, value):
-        self.kvstore[key] = value
-        self.incRefCount(key)
+        if key in self.kvstore:
+            self.kvstore[key].refCount += 1
+        else:
+            self.kvstore[key] = Datum(value) 
 
     def get(self, key):
-        return self.kvstore[key]
+        return self.kvstore[key].value
 
     def incRefCount(self, key):
-        pass # We don't do garbage collection for now.
+        self.kvstore[key].refCount += 1
         
     def decRefCount(self, key):
-        pass # We don't do garbage collection for now.
+        datum = self.kvstore[key]
+        datum.refCount -= 1
+        if datum.refCount == 0:
+            del self.kvstore[key]

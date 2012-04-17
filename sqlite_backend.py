@@ -26,7 +26,8 @@ class SQLiteBackend:
     # filename is the local file for the SQLite database.
     def __init__(self, filename):
         # Open a connection to the database.
-        engine = create_engine('sqlite:///' + filename)
+        url = 'sqlite:///' + filename
+        engine = create_engine(url)
         
         # Create all the necessary tables. This will do nothing if the tables already exist.
         Base.metadata.create_all(engine)
