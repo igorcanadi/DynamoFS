@@ -16,7 +16,6 @@ class DictBackend:
         except:
             # The file failed to load, so just start with an empty dict.
             self.kvstore = dict()
-            pass
 
     def __del__(self):
         # Persist the dictionary.

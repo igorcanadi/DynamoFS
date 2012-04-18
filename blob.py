@@ -47,9 +47,9 @@ class Blob(object):
 
     def deserialize_data(self, data):
         """
-        Override this method if the data attribute cannot be serialized by cPickle normally
+        Override this method if the data attribute cannot be deserialized by cPickle normally
         """
-        self._data = data.fromstring()
+        self._data = cPickle.loads(data)
 
     @property
     def key(self):
@@ -241,7 +241,7 @@ class BlockBlob(Blob):
         return self.data.tostring()
 
     def deserialize_data(self, data):
-        self.data = data.fromstring()
+        self.data = array("B").fromstring()
 
     def data_as_string(self):
         return "".join(map(chr, self.data))
