@@ -23,9 +23,15 @@ class DynamoDBBackend:
         # Initialize the client library, using the credentials.
         credentials = PropertiesCredentials(FileInputStream(credentialsFile))
         self.client = AmazonDynamoDBClient(credentials)
+        
+    # Makes an API Key object from a key string.
+    def apiKey(self, key):
+        return Key().withHashKeyElement(AttributeValue().withS(key))
 
     def put(self, key, value):
-        # Build an UpdateItem request that atomically increments the refCount
+        key = self.apiKey(key)
+        
+        # Issue an UpdateItem request that atomically increments the refCount
         # and puts the value. This will transparently create the item if it
         # isn't there already.
         updates = HashMap()
@@ -42,17 +48,43 @@ class DynamoDBBackend:
         
         request = (UpdateItemRequest()
                    .withTableName(tableName)
-                   .withKey(Key().withHashKeyElement(AttributeValue().withS(key)))
+                   .withKey(key)
                    .withAttributeUpdates(updates))
-        
-        self.client.updateItem(request) # TODO handle errors
+        result = self.client.updateItem(request) # TODO handle errors
+        # TODO collect capacity units consumed
 
     def get(self, key):
-        pass
+        key = self.apiKey(key)
+        
+        # Issue an eventually-consistent GetItem request.
+        request = (GetItemRequest()
+                   .withConsistentRead(False) # No strong consistency.
+                   .withKey(key)
+                   .withAttributesToGet("value"))
+        result = self.client.getItem(request) # TODO handle errors
+        # TODO collect capacity units consumed
+        
+        item = result.getItem()
+        if not(item is None):
+            return item.get("value").getS()
+        
+        else:
+            # If the eventually consistent request failed, try a consistent GetItem request.
+            request = request.withConsistendRead(True)
+            result = self.client.getItem(request)
+            # TODO collect capacity units consumed.
+            
+            if not(item is None):
+                return item.get("value").getS()
+            
+            else: # The key must not exist in the database.
+                raise KeyError
 
     def incRefCount(self, key):
+        # TODO
         pass
         
     def decRefCount(self, key):
+        # TODO
         pass
         
