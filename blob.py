@@ -12,14 +12,14 @@ class Blob(object):
         self.parent = parent
 
     # returns (hash, blob)
-    def get_hash_and_blob(self, c):
-        cp = cPickle.dumps((c, self.serializable_data()))
+    def _get_hash_and_blob(self):
+        cp = cPickle.dumps(self.serializable_data())
         hash = hashlib.sha512(cp).hexdigest()
         return (hash, cp)
 
     def flush(self):
         if self.dirty:
-            (self._key, value) = self.get_hash_and_blob('trash TODO remove me')
+            (self._key, value) = self._get_hash_and_blob()
             self.cntl.putdata(self._key, value)
         self.dirty = False
         if self.parent == None:
@@ -54,7 +54,7 @@ class Blob(object):
     @property
     def key(self):
         if self.dirty:
-            self._key, _ = self.get_hash_and_blob(self.__class__)
+            self._key, _ = self._get_hash_and_blob()
         return self._key
 
 def dirties(fn):
@@ -74,7 +74,7 @@ def validate(fn):
     """
     def wrapped(self, *args, **kwargs):
         if self.invalid:
-            self.deserialize_data(self.cntl.getdata(self.key)[1])
+            self.deserialize_data(self.cntl.getdata(self.key))
         self.valid = True
         self.dirty = False
         return fn(self, *args, **kwargs)
