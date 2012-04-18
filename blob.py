@@ -22,10 +22,13 @@ class Blob(object):
             (self._key, value) = self.get_hash_and_blob('trash TODO remove me')
             self.cntl.putdata(self._key, value)
         self.dirty = False
+        if self.parent == None:
+            # I'm root
+            self.cntl.update_root(self._key)
 
     def recursiveFlush(self):
         for child in self.children:
-            child.flush()
+            child.recursiveFlush()
         self.flush()
 
     @property
