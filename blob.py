@@ -17,19 +17,16 @@ class Blob(object):
         hash = hashlib.sha512(cp).hexdigest()
         return (hash, cp)
 
-    def flushSelfOnly(self):
+    def flush(self):
         if self.dirty:
             (self._key, value) = self.get_hash_and_blob('trash TODO remove me')
             self.cntl.putdata(self._key, value)
         self.dirty = False
 
-    def flush(self):
-        if self.dirty:
-            (self._key, value) = self.get_hash_and_blob('trash TODO remove me')
-            self.cntl.putdata(self._key, value)
-            if not self.parent == None:
-                self.parent.flush()
-        self.dirty = False
+    def recursiveFlush(self):
+        for child in self.children:
+            child.flush()
+        self.flush()
 
     @property
     def invalid(self):
@@ -124,7 +121,10 @@ class DirectoryBlob(Blob):
         raise NotImplementedError()
 
     def keys(self):
-        return self.data.keys()
+        """
+        Returns the filenames of all files in this directory.
+        """
+        return self.items.keys()
 
     def getdata(self):
         if not hasattr(self, "_data"):
@@ -137,6 +137,10 @@ class DirectoryBlob(Blob):
         self._data = value
 
     data = property(getdata, setdata)
+
+    @property
+    def children(self):
+        return self.items.values()
 
 class BlockListBlob(Blob):
     # DATATYPE is the type that the data is stored in for this class
@@ -190,6 +194,10 @@ class BlockListBlob(Blob):
         for key in data:
             self.blocks.append(BlockBlob(key, self.cntl, self))
 
+    @property
+    def children(self):
+        return self.blocks
+
 class BlockBlob(Blob):
     # DATATYPE is the type that the data is stored in for this class
     DATATYPE = array
@@ -234,3 +242,7 @@ class BlockBlob(Blob):
 
     def data_as_string(self):
         return "".join(map(chr, self.data))
+
+    @property
+    def children(self):
+        return None
