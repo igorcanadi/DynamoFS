@@ -99,6 +99,7 @@ class DirectoryBlob(Blob):
         return self.items[filename]
 
     @dirties
+    @validate
     def __setitem__(self, filename, blob):
         """
         Sets directory or filename key to point to blob value
@@ -111,6 +112,7 @@ class DirectoryBlob(Blob):
         self.data[filename] = (blob.__class__, blob.key)
 
     @dirties
+    @validate
     def __delitem__(self, key):
         """
         Deletes child from this directory.
