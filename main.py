@@ -6,6 +6,12 @@ import blob
 import hashlib
 import cPickle
 
+def generate_root(cntl):
+    b = blob.DirectoryBlob(None, cntl, None, True)
+    b.flush()
+    open('fs_root.txt', 'w').write(b.key)
+    return b
+
 if __name__ == '__main__':
     #ss = dict_backend.DictBackend('server_stub_backup.dat')
     ss = sqlite_backend.SQLiteBackend('sqlite.db')
