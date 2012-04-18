@@ -14,17 +14,19 @@ class Blob(object):
     # returns (hash, blob)
     def get_hash_and_blob(self, c):
         cp = cPickle.dumps((c, self.serializable_data()))
-        self._key = hashlib.sha512(cp).hexdigest()
-        return (self._key, cp)
+        hash = hashlib.sha512(cp).hexdigest()
+        return (hash, cp)
 
     def flushSelfOnly(self):
         if self.dirty:
-            self.key = self.cntl.putdata(self)
+            (self._key, value) = self.get_hash_and_blob('trash TODO remove me')
+            self.cntl.putdata(self._key, value)
         self.dirty = False
 
     def flush(self):
         if self.dirty:
-            self._key = self.cntl.putdata(self)
+            (self._key, value) = self.get_hash_and_blob('trash TODO remove me')
+            self.cntl.putdata(self._key, value)
             if not self.parent == None:
                 self.parent.flush()
         self.dirty = False

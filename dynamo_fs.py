@@ -6,16 +6,15 @@ def _get_plist(path):
     return filter(len, path.split('/'))
 
 class DynamoFS:
-    root_filename = ""
-    root_hash = ""
-    server = False
-
     def __init__(self, server, root_filename):
         self.cntl = controller.Controller(server, root_filename)
+        root_hash = self.cntl.get_root_hash()
+        # if root_hash == None, it means we don't have a root, so this just generates it
+        self.root = blob.DirectoryBlob(root_hash, self.cntl, None, root_hash == None)
 
     def _find_leaf(self, path):
         # look up parent
-        current = self.cntl.root
+        current = self.root
         plist = _get_plist(path)
         for elem in plist:
             current = current[elem]
