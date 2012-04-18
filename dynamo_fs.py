@@ -20,8 +20,16 @@ class DynamoFS:
             current = current[elem]
         return current
 
+    def _file_exists(self, parent, filename):
+        return filename in parent.keys()
+
+    def _create_file(self, parent, filename):
+
+
     # mode can be 'r' or 'w'
     def open(self, filename, mode):
+        self.parent[self.filename] = \
+            blob.BlockListBlob(None, self.cntl, self.parent, True)
         plist = _get_plist(filename)
         parent = self._find_leaf('/'.join(plist[:-1]))
         return file.File(plist[-1], mode, self.cntl, parent)
