@@ -32,4 +32,3 @@ class File:
 
     def close(self):
         self.parent[self.filename].flush()
-

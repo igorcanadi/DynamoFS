@@ -166,32 +166,33 @@ class BlockListBlob(Blob):
         return self.blocks[item]
 
     @dirties
+    @validate   # TODO: confirm this is the right order of invocation
     def __setitem__(self, key, value):
-        if not isinstance(value, Blob):
+        if not isinstance(value, BlockBlob):
             raise TypeError()
         self.blocks[key] = value
 
     @dirties
+    @validate # TODO: confirm this is the right order of invocation
     def __delitem__(self, key):
         # TODO: decrement reference count of deleted object
-        del self.data[key]
         del self.blocks[key]
 
     def __del__(self):
         # TODO: flush if necessary
         pass
 
-    def getdata(self):
-        if not hasattr(self, "_data"):
-            self._data = list()
-        return self._data
+    @property
+    def data(self):
+        data = list()
+        for block in self.blocks:
+            data.append(block.key)
+        return data
 
-    def setdata(self, value):
-        if not isinstance(value, BlockListBlob.DATATYPE):
-            raise TypeError()
-        self._data = value
-
-    data = property(getdata, setdata)
+    def deserialize_data(self, data):
+        self.blocks = list()
+        for key in data:
+            self.blocks.append(BlockBlob(key, self.cntl, self))
 
 class BlockBlob(Blob):
     # DATATYPE is the type that the data is stored in for this class
@@ -201,25 +202,18 @@ class BlockBlob(Blob):
         super(BlockBlob, self).__init__(key, cntl, parent, valid)
 
     @validate
-    def __getitem__(self, item):
-        if len(self.data) - 1 < item:
-            # TODO: should this actually raise an IndexOutOfBounds exception?
+    def __getitem__(self, index):
+        if len(self.data) - 1 < index:
+            raise IndexError("index out of range")
+        return self.data[index]
+
+    @dirties
+    def __setitem__(self, index, value):
+        if len(self.data) - 1 < index:
             # block list is too short; expand
-            self.data.extend([0 for i in range(item - len(self.data) + 1)])
-        return self.data[item]
-
-    @dirties
-    def __setitem__(self, key, value):
-        if not isinstance(value, Blob):
-            raise TypeError()
-        # TODO: add self to parent's dirty list
-        self.data[key] = value
-
-    @dirties
-    def __delitem__(self, key):
-        # TODO: decrement reference count of deleted object
-        # TODO: add self to parent's dirty list
-        del self.data[key]
+            # TODO: test against PAGE_SIZE
+            self.data.extend([0 for i in range(index - len(self.data) + 1)])
+        self.data[index] = value
 
     def __del__(self):
         # TODO: flush if necessary
