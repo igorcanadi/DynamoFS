@@ -17,19 +17,16 @@ class Blob(object):
         hash = hashlib.sha512(cp).hexdigest()
         return (hash, cp)
 
-    def flushSelfOnly(self):
+    def flush(self):
         if self.dirty:
             (self._key, value) = self.get_hash_and_blob('trash TODO remove me')
             self.cntl.putdata(self._key, value)
         self.dirty = False
 
-    def flush(self):
-        if self.dirty:
-            (self._key, value) = self.get_hash_and_blob('trash TODO remove me')
-            self.cntl.putdata(self._key, value)
-            if not self.parent == None:
-                self.parent.flush()
-        self.dirty = False
+    def recursiveFlush(self):
+        for child in self.children:
+            child.flush()
+        self.flush()
 
     @property
     def invalid(self):
@@ -53,7 +50,8 @@ class Blob(object):
 
     @property
     def key(self):
-        self._key, _ = self.get_hash_and_blob(self.__class__)
+        if self.dirty:
+            self._key, _ = self.get_hash_and_blob(self.__class__)
         return self._key
 
 def dirties(fn):
@@ -101,6 +99,7 @@ class DirectoryBlob(Blob):
         return self.items[filename]
 
     @dirties
+    @validate
     def __setitem__(self, filename, blob):
         """
         Sets directory or filename key to point to blob value
@@ -113,6 +112,7 @@ class DirectoryBlob(Blob):
         self.data[filename] = (blob.__class__, blob.key)
 
     @dirties
+    @validate
     def __delitem__(self, key):
         """
         Deletes child from this directory.
@@ -120,13 +120,11 @@ class DirectoryBlob(Blob):
         # TODO: implement
         raise NotImplementedError()
 
-    def __del__(self):
-        # TODO: flush if necessary (this will come into play when we start evicting
-        # items from cache)
-        pass
-
     def keys(self):
-        return self.data.keys()
+        """
+        Returns the filenames of all files in this directory.
+        """
+        return self.items.keys()
 
     def getdata(self):
         if not hasattr(self, "_data"):
@@ -139,6 +137,10 @@ class DirectoryBlob(Blob):
         self._data = value
 
     data = property(getdata, setdata)
+
+    @property
+    def children(self):
+        return self.items.values()
 
 class BlockListBlob(Blob):
     # DATATYPE is the type that the data is stored in for this class
@@ -180,10 +182,6 @@ class BlockListBlob(Blob):
         # TODO: decrement reference count of deleted object
         del self.blocks[key]
 
-    def __del__(self):
-        # TODO: flush if necessary
-        pass
-
     @property
     def data(self):
         data = list()
@@ -195,6 +193,10 @@ class BlockListBlob(Blob):
         self.blocks = list()
         for key in data:
             self.blocks.append(BlockBlob(key, self.cntl, self))
+
+    @property
+    def children(self):
+        return self.blocks
 
 class BlockBlob(Blob):
     # DATATYPE is the type that the data is stored in for this class
@@ -216,10 +218,6 @@ class BlockBlob(Blob):
             # TODO: test against PAGE_SIZE
             self.data.extend([0 for i in range(index - len(self.data) + 1)])
         self.data[index] = value
-
-    def __del__(self):
-        # TODO: flush if necessary
-        pass
 
     def getdata(self):
         """
@@ -244,3 +242,7 @@ class BlockBlob(Blob):
 
     def data_as_string(self):
         return "".join(map(chr, self.data))
+
+    @property
+    def children(self):
+        return None
