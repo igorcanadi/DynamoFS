@@ -245,3 +245,6 @@ class BlockBlob(Blob):
 
     def deserialize_data(self, data):
         self.data = data.fromstring()
+
+    def data_as_string(self):
+        return "".join(map(chr, self.data))

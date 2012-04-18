@@ -45,5 +45,5 @@ class OpenReadTestCase(OpenWriteTestCase):
     def runTest(self):
         super(OpenReadTestCase, self).runTest()
         somefile = self.dfs.open(OpenWriteTestCase.filename, "r")
-        self.assertEqual(somefile.read(), OpenWriteTestCase.writtenString)
+        self.assertEqual(OpenWriteTestCase.writtenString, somefile.read())
         somefile.close()

@@ -24,7 +24,7 @@ class File:
     # ...and reads
     def read(self):
         blocklist = self.parent[self.filename]
-        return "".join(map(lambda x: x.getdata(), blocklist.getdata()))
+        return "".join(map(lambda x: str(x.data_as_string()), blocklist.blocks))
 
     # ... so no seek for the first iteration
     def seek(self, offset, whence):
