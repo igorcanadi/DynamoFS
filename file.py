@@ -20,6 +20,8 @@ class File:
 
     # ...and reads
     def read(self):
+        if self.mode != 'r':
+            raise Exception('not readable, sorry')
         return "".join(map(lambda x: str(x.data_as_string()), self.blob.blocks))
 
     # ... so no seek for the first iteration
