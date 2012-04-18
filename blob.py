@@ -51,7 +51,8 @@ class Blob(object):
 
     @property
     def key(self):
-        self._key, _ = self.get_hash_and_blob(self.__class__)
+        if self.dirty:
+            self._key, _ = self.get_hash_and_blob(self.__class__)
         return self._key
 
 def dirties(fn):
