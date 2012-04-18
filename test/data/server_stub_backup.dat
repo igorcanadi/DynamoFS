@@ -1,2 +1,26 @@
 (dp1
-.
+S'3ba19ce8c5842b01b5868d7ca9632eb596d47e3e0497b0d05fa02ca2db55d4159eaaae4903e571fa26f1793d1375d830af064cddd5832a58c5ce5bdaca83f054'
+p2
+(idict_backend
+Datum
+p3
+(dp4
+S'refCount'
+p5
+I4
+sS'value'
+p6
+S'(dp1\n.'
+p7
+sbsS'f3f1293da43f465ca0e2458b94ae6901284c3ab9e12b6a29c7f86f8794cc9e92f63b48cef5c850287eebeb473b72922f77efd28dbfdabc912d505a2daec10645'
+p8
+(idict_backend
+Datum
+p9
+(dp10
+g5
+I1
+sg6
+S"S'Hello, world!'\n."
+p11
+sbs.

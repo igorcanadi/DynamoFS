@@ -27,8 +27,9 @@ class Blob(object):
             self.cntl.update_root(self._key)
 
     def recursiveFlush(self):
-        for child in self.children:
-            child.recursiveFlush()
+        if self.children != None:
+            for child in self.children:
+                child.recursiveFlush()
         self.flush()
 
     @property

@@ -12,6 +12,9 @@ class DynamoFS:
         # if root_hash == None, it means we don't have a root, so this just generates it
         self.root = blob.DirectoryBlob(root_hash, self.cntl, None, root_hash == None)
 
+    def __del__(self):
+        self.root.recursiveFlush()
+
     def _find_leaf(self, path):
         # look up parent
         current = self.root
