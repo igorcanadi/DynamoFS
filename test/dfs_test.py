@@ -47,3 +47,23 @@ class OpenReadTestCase(OpenWriteTestCase):
         somefile = self.dfs.open(OpenWriteTestCase.filename, "r")
         self.assertEqual(OpenWriteTestCase.writtenString, somefile.read())
         somefile.close()
+
+class RmTestCase(BasicTest):
+    def runTest(self):
+        super(RmTestCase, self).runTest()
+        self.dfs.mkdir('/', 'a')
+        self.dfs.mkdir('/a', 'test_dir')
+        self.dfs.mkdir('/a', 'works')
+        self.assertEqual(self.dfs.ls('/a'), ['test_dir', 'works'])
+        self.dfs.rm('/a/test_dir')
+        self.assertEqual(self.dfs.ls('/a'), ['works'])
+
+class MvTestCase(BasicTest):
+    def runTest(self):
+        super(MvTestCase, self).runTest()
+        self.dfs.mkdir('/', 'a')
+        self.dfs.mkdir('/a', 'test_dir')
+        self.dfs.mkdir('/a', 'works')
+        self.assertEqual(self.dfs.ls('/a'), ['test_dir', 'works'])
+        self.dfs.mv('/a/', 'test_dir', 'pas')
+        self.assertEqual(self.dfs.ls('/a'), ['works', 'pas'])

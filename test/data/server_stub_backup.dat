@@ -7,7 +7,7 @@ p3
 (dp4
 S'refCount'
 p5
-I4
+I21
 sS'value'
 p6
 S'(dp1\n.'
@@ -19,7 +19,7 @@ Datum
 p9
 (dp10
 g5
-I1
+I2
 sg6
 S"S'Hello, world!'\n."
 p11

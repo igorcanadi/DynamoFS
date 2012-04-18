@@ -5,6 +5,9 @@ import file
 def _get_plist(path):
     return filter(len, path.split('/'))
 
+def _get_leaf_filename(path):
+    return _get_plist(path)[-1]
+
 class DynamoFS:
     def __init__(self, server, root_filename):
         self.cntl = controller.Controller(server, root_filename)
@@ -42,7 +45,7 @@ class DynamoFS:
 
     def rm(self, filename):
         target = self._find_leaf(filename)
-        del target.parent[target]
+        del target.parent[_get_leaf_filename(filename)]
 
     def mkdir(self, path, new_dir):
         # TODO: add error checking
@@ -53,7 +56,9 @@ class DynamoFS:
     def ls(self, path):
         return self._find_leaf(path).keys()
 
-    # Renames a file or directory.
-    def rename(self, old_name, new_name):
-        pass
+    def mv(self, path, old_name, new_name):
+        target = self._find_leaf(path + '/' + old_name)
+        target.parent[new_name] = target.parent[old_name]
+        del target.parent[old_name]
+
 

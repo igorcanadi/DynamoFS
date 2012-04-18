@@ -121,8 +121,9 @@ class DirectoryBlob(Blob):
         """
         Deletes child from this directory.
         """
-        # TODO: implement
-        raise NotImplementedError()
+        # TODO: add garbage collection and everything 
+        del self.items[key]
+        del self.data[key]
 
     def keys(self):
         """
