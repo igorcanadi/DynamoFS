@@ -121,11 +121,6 @@ class DirectoryBlob(Blob):
         # TODO: implement
         raise NotImplementedError()
 
-    def __del__(self):
-        # TODO: flush if necessary (this will come into play when we start evicting
-        # items from cache)
-        pass
-
     def keys(self):
         return self.data.keys()
 
@@ -181,10 +176,6 @@ class BlockListBlob(Blob):
         # TODO: decrement reference count of deleted object
         del self.blocks[key]
 
-    def __del__(self):
-        # TODO: flush if necessary
-        pass
-
     @property
     def data(self):
         data = list()
@@ -217,10 +208,6 @@ class BlockBlob(Blob):
             # TODO: test against PAGE_SIZE
             self.data.extend([0 for i in range(index - len(self.data) + 1)])
         self.data[index] = value
-
-    def __del__(self):
-        # TODO: flush if necessary
-        pass
 
     def getdata(self):
         """
