@@ -1,5 +1,4 @@
 import cPickle
-import key_hash
 
 # Tuple stored in the dict.
 class Datum:
