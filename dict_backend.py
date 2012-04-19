@@ -17,9 +17,12 @@ class DictBackend:
             # The file failed to load, so just start with an empty dict.
             self.kvstore = dict()
 
-    def __del__(self):
+    def cleanup(self):
         # Persist the dictionary.
         cPickle.dump(self.kvstore, open(self.filename, 'w'))
+
+    def __del__(self):
+        self.cleanup()
 
     def put(self, key, value):
         if key in self.kvstore:

@@ -15,8 +15,11 @@ class DynamoFS:
         # if root_hash == None, it means we don't have a root, so this just generates it
         self.root = blob.DirectoryBlob(root_hash, self.cntl, None, root_hash == None)
 
-    def __del__(self):
+    def cleanup(self):
         self.root.recursiveFlush()
+
+    def __del__(self):
+        self.cleanup()
 
     def _find_leaf(self, path):
         # look up parent
@@ -36,12 +39,13 @@ class DynamoFS:
     def open(self, filename, mode):
         plist = _get_plist(filename)
         parent = self._find_leaf('/'.join(plist[:-1]))
-        if not self._file_exists(parent, filename):
+        leaf_name = plist[-1]
+        if not self._file_exists(parent, leaf_name):
             if mode == 'r':
                 raise Exception('File not found')
             else:
-                self._create_file(parent, filename)
-        return file.File(parent[filename], mode)
+                self._create_file(parent, leaf_name)
+        return file.File(parent[leaf_name], mode)
 
     def rm(self, filename):
         target = self._find_leaf(filename)
@@ -60,5 +64,30 @@ class DynamoFS:
         target = self._find_leaf(path + '/' + old_name)
         target.parent[new_name] = target.parent[old_name]
         del target.parent[old_name]
+
+    def get_key_for_sharing(self, path):
+        target = self._find_leaf(path)
+        target.recursiveFlush()
+        return target.key
+
+    def attach_shared_key(self, path, filename, key):
+        target = self._find_leaf(path)
+        target[filename] = blob.DirectoryBlob(key, self.cntl, target, False)
+        print target[filename].data
+
+    def _output_whole_tree(self, b, level):
+        if b == None:
+            return
+        print "%s: %s" % (level, b.key)
+        if isinstance(b, blob.DirectoryBlob):
+            for i in b.data:
+                print level + " " + i
+                self._output_whole_tree(b[i], level+"-------")
+
+    def debug_output_whole_tree(self):
+        print "---------------------------- WHOLE TREE -----------------"
+        self._output_whole_tree(self.root, "")
+        print "---------------------------- END -----------------"
+
 
 

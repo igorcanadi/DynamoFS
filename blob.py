@@ -3,11 +3,14 @@ from array import array
 import cPickle
 import hashlib
 
+# TODO make sure we keep the invariant:
+# valid or not dirty
+# if it's not valid, it cannot be dirty!
 class Blob(object):
     def __init__(self, key, cntl, parent, valid = False):
         self._key = key
         self.valid = valid
-        self.dirty = True
+        self.dirty = valid 
         self.cntl = cntl
         self.parent = parent
 
@@ -21,10 +24,13 @@ class Blob(object):
         if self.dirty:
             (self._key, value) = self._get_hash_and_blob()
             self.cntl.putdata(self._key, value)
-        self.dirty = False
-        if self.parent == None:
-            # I'm root
-            self.cntl.update_root(self._key)
+            # If i'm root, update root
+            if self.parent == None:
+                self.cntl.update_root(self._key)
+            else:
+                self.parent.dirty = True
+                self.parent.flush()
+            self.dirty = False
 
     def recursiveFlush(self):
         if self.children != None:
@@ -54,7 +60,7 @@ class Blob(object):
 
     @property
     def key(self):
-        if self.dirty:
+        if self.dirty and self.valid:
             self._key, _ = self._get_hash_and_blob()
         return self._key
 
@@ -76,8 +82,8 @@ def validate(fn):
     def wrapped(self, *args, **kwargs):
         if self.invalid:
             self.deserialize_data(self.cntl.getdata(self.key))
+            self.dirty = False
         self.valid = True
-        self.dirty = False
         return fn(self, *args, **kwargs)
     return wrapped
 
@@ -102,8 +108,8 @@ class DirectoryBlob(Blob):
             self.items[filename] = itemclass(itemHash, self.cntl, self)
         return self.items[filename]
 
-    @dirties
     @validate
+    @dirties
     def __setitem__(self, filename, blob):
         """
         Sets directory or filename key to point to blob value
@@ -115,8 +121,8 @@ class DirectoryBlob(Blob):
         self.items[filename] = blob
         self.data[filename] = (blob.__class__, blob.key)
 
-    @dirties
     @validate
+    @dirties
     def __delitem__(self, key):
         """
         Deletes child from this directory.
@@ -125,17 +131,21 @@ class DirectoryBlob(Blob):
         del self.items[key]
         del self.data[key]
 
+    @validate
     def keys(self):
         """
         Returns the filenames of all files in this directory.
         """
-        return self.items.keys()
+        return self.data.keys()
 
+    @validate
     def getdata(self):
         if not hasattr(self, "_data"):
             self._data = dict()
         return self._data
 
+    @validate
+    @dirties
     def setdata(self, value):
         if not isinstance(value, DirectoryBlob.DATATYPE):
             raise TypeError()
@@ -174,15 +184,15 @@ class BlockListBlob(Blob):
             self.blocks[item] = BlockBlob(self.data[item], self.cntl, self, isBlockValid)
         return self.blocks[item]
 
-    @dirties
     @validate   # TODO: confirm this is the right order of invocation
+    @dirties
     def __setitem__(self, key, value):
         if not isinstance(value, BlockBlob):
             raise TypeError()
         self.blocks[key] = value
 
-    @dirties
     @validate # TODO: confirm this is the right order of invocation
+    @dirties
     def __delitem__(self, key):
         # TODO: decrement reference count of deleted object
         del self.blocks[key]
@@ -216,6 +226,7 @@ class BlockBlob(Blob):
             raise IndexError("index out of range")
         return self.data[index]
 
+    @validate
     @dirties
     def __setitem__(self, index, value):
         if len(self.data) - 1 < index:
