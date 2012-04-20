@@ -75,18 +75,17 @@ class DynamoFS:
         target[filename] = blob.DirectoryBlob(key, self.cntl, target, False)
         print target[filename].data
 
-    def _output_whole_tree(self, b, level):
-        if b == None:
-            return
-        print "%s: %s" % (level, b.key)
-        if isinstance(b, blob.DirectoryBlob):
-            for i in b.data:
-                print level + " " + i
-                self._output_whole_tree(b[i], level+"-------")
+    def _output_whole_tree(self, node, level):
+        if isinstance(node, blob.DirectoryBlob):
+            for filename in node.keys():
+                print "\t" * level + filename
+                self._output_whole_tree(node[filename], level + 1)
+        elif isinstance(node, blob.BlockListBlob):
+            print "\t" * level + "".join([block.data_as_string() for block in node.children])
 
     def debug_output_whole_tree(self):
         print "---------------------------- WHOLE TREE -----------------"
-        self._output_whole_tree(self.root, "")
+        self._output_whole_tree(self.root, 0)
         print "---------------------------- END -----------------"
 
 

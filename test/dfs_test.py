@@ -12,8 +12,12 @@ class BasicTest(unittest.TestCase):
     def setUp(self):
         self.ss = dict_backend.DictBackend(MkdirLsTestCase.serverBackupFilename)
         self.dfs = dynamo_fs.DynamoFS(self.ss, MkdirLsTestCase.rootFilename)
+        print "Initial state"
+        self.dfs.debug_output_whole_tree()
 
     def tearDown(self):
+        print "Final state"
+        self.dfs.debug_output_whole_tree()
         del self.dfs
         del self.ss
 
