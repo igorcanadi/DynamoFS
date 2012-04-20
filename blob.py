@@ -3,32 +3,28 @@ from array import array
 import cPickle
 import hashlib
 
-# TODO make sure we keep the invariant:
-# valid or not dirty
-# if it's not valid, it cannot be dirty!
 class Blob(object):
     def __init__(self, key, cntl, parent, valid = False):
+        """
+        key is None if and only if valid is True.
+        """
+        if (key == None) != valid:
+            raise
         self._key = key
-        self.valid = valid
-        self.dirty = valid 
-        self.cntl = cntl
+        self._blob = None
         self.parent = parent
-
-    # returns (hash, blob)
-    def _get_hash_and_blob(self):
-        cp = cPickle.dumps(self.serializable_data())
-        hash = hashlib.sha512(cp).hexdigest()
-        return (hash, cp)
+        self.valid = valid
+        self.dirty = True
+        self.cntl = cntl
 
     def flush(self):
         if self.dirty:
-            (self._key, value) = self._get_hash_and_blob()
-            self.cntl.putdata(self._key, value)
+#            (self.__key, value) = self._get_hash_and_blob()
+            self.cntl.putdata(self.key, self.blob)
             # If i'm root, update root
             if self.parent == None:
-                self.cntl.update_root(self._key)
+                self.cntl.update_root(self.key)
             else:
-                self.parent.dirty = True
                 self.parent.flush()
             self.dirty = False
 
@@ -46,23 +42,51 @@ class Blob(object):
     def clean(self):
         return not self.dirty
 
-    def serializable_data(self):
+    def _serializable_data(self):
         """
-        Override this method if the data format can't be serialized by cPickle normally.
+        This method returns the blob's data in a form in which it can be serialized by
+        cPickle. Data may be, for example, a dict mapping filenames to keys (for a
+        directory), or a list of keys (for a block list), or a string representing a
+        list of bytes (for a block).
         """
-        return self.data
+        raise NotImplementedError()
 
-    def deserialize_data(self, data):
+    def _deserialize_data(self, data):
         """
-        Override this method if the data attribute cannot be deserialized by cPickle normally
+        The parameter to this function is an object that was previously output by a call
+        to serializable_data on a blob of this blob's type. It will use the data to
+        initialize this blob. For example, if
         """
-        self._data = cPickle.loads(data)
+        raise NotImplementedError()
+
+    def _update_hash_and_blob(self):
+#        if self.dirty and self.valid:
+        if None in (self._key, self._blob):
+            cp = cPickle.dumps(self._serializable_data())
+            hash = hashlib.sha512(cp).hexdigest()
+            self._key, self._blob = hash, cp
 
     @property
     def key(self):
-        if self.dirty and self.valid:
-            self._key, _ = self._get_hash_and_blob()
+        self._update_hash_and_blob()
         return self._key
+
+    @property
+    def blob(self):
+        self._update_hash_and_blob()
+        return self._blob
+
+    def getdirty(self):
+        return self._dirty
+
+    def setdirty(self, value):
+        if not isinstance(value, bool):
+            raise TypeError("dirty variable can be only True or False")
+        if value == True and self.parent != None:
+            self.parent.dirty = True
+        self._dirty = value
+
+    dirty = property(getdirty, setdirty)
 
 def dirties(fn):
     """
@@ -71,6 +95,7 @@ def dirties(fn):
     """
     def wrapped(self, *args, **kwargs):
         self.dirty = True
+        self.__key = None
         return fn(self, *args, **kwargs)
     return wrapped
 
@@ -81,9 +106,10 @@ def validate(fn):
     """
     def wrapped(self, *args, **kwargs):
         if self.invalid:
-            self.deserialize_data(self.cntl.getdata(self.key))
+            self._deserialize_data(self.cntl.getdata(self.key))
             self.dirty = False
         self.valid = True
+        self.__blob = None
         return fn(self, *args, **kwargs)
     return wrapped
 
@@ -93,7 +119,8 @@ class DirectoryBlob(Blob):
 
     def __init__(self, key, cntl, parent = None, valid = False):
         super(DirectoryBlob, self).__init__(key, cntl, parent, valid)
-        self.items = dict()
+        if valid:
+            self.items = dict()
 
     @validate
     def __getitem__(self, filename):
@@ -102,10 +129,8 @@ class DirectoryBlob(Blob):
         """
         if not isinstance(filename, str):
             raise TypeError("item was of type %s, expected %s" % (type(filename), str))
-        # TODO (jim) if it's not there, raise an error, don't create
         if filename not in self.items:
-            itemclass, itemHash = self.data[filename]
-            self.items[filename] = itemclass(itemHash, self.cntl, self)
+            raise IOError()
         return self.items[filename]
 
     @validate
@@ -119,7 +144,6 @@ class DirectoryBlob(Blob):
         if not isinstance(blob, DirectoryBlob) and not isinstance(blob, BlockListBlob):
             raise TypeError("key was of type %s, expected %s or %s" % (type(filename), DirectoryBlob, BlockListBlob))
         self.items[filename] = blob
-        self.data[filename] = (blob.__class__, blob.key)
 
     @validate
     @dirties
@@ -129,33 +153,29 @@ class DirectoryBlob(Blob):
         """
         # TODO: add garbage collection and everything 
         del self.items[key]
-        del self.data[key]
 
     @validate
     def keys(self):
         """
         Returns the filenames of all files in this directory.
         """
-        return self.data.keys()
-
-    @validate
-    def getdata(self):
-        if not hasattr(self, "_data"):
-            self._data = dict()
-        return self._data
-
-    @validate
-    @dirties
-    def setdata(self, value):
-        if not isinstance(value, DirectoryBlob.DATATYPE):
-            raise TypeError()
-        self._data = value
-
-    data = property(getdata, setdata)
+        return self.items.keys()
 
     @property
+    @validate
     def children(self):
         return self.items.values()
+
+    def _serializable_data(self):
+        data = dict()
+        for filename, blob in self.items.items():
+            data[filename] = (blob.__class__, blob.key)
+        return data
+
+    def _deserialize_data(self, data):
+        self.items = dict()
+        for filename, (itemclass, item) in data:
+            self.items[filename] = itemclass(item, self.cntl, self)
 
 class BlockListBlob(Blob):
     # DATATYPE is the type that the data is stored in for this class
@@ -163,48 +183,47 @@ class BlockListBlob(Blob):
 
     def __init__(self, key, cntl, parent, valid = False):
         super(BlockListBlob, self).__init__(key, cntl, parent, valid)
-        self.blocks = list()
+        if valid:
+            self.blocks = list()
 
     @validate
     def __getitem__(self, item):
-        isBlockValid = False
-        if len(self.data) - 1 < item:
+        if len(self.blocks) - 1 < item:
             # block list is too short; expand
-            isBlockValid = True
+            self.dirty = True
             self.blocks.extend([
                 BlockBlob(None, self.cntl, self, True)
                     for i in range(item - len(self.blocks) + 1)
             ])
-            self.data.extend([
-                None
-                    for i in range(item - len(self.blocks) + 1)
-            ])
-        if self.blocks[item] == None:
-            # fetch block
-            self.blocks[item] = BlockBlob(self.data[item], self.cntl, self, isBlockValid)
         return self.blocks[item]
 
-    @validate   # TODO: confirm this is the right order of invocation
+    @validate
     @dirties
     def __setitem__(self, key, value):
         if not isinstance(value, BlockBlob):
             raise TypeError()
         self.blocks[key] = value
 
-    @validate # TODO: confirm this is the right order of invocation
+    @validate
     @dirties
     def __delitem__(self, key):
         # TODO: decrement reference count of deleted object
         del self.blocks[key]
 
-    @property
-    def data(self):
+    def _serializable_data(self):
+        """
+        Returns a list of the keys of the blocks in this block list.
+        """
         data = list()
         for block in self.blocks:
             data.append(block.key)
         return data
 
-    def deserialize_data(self, data):
+    def _deserialize_data(self, data):
+        """
+        Expects a list of keys of blocks in this block list; initializes the
+        block list with invalid BlockBlob objects.
+        """
         self.blocks = list()
         for key in data:
             self.blocks.append(BlockBlob(key, self.cntl, self))
@@ -219,6 +238,8 @@ class BlockBlob(Blob):
 
     def __init__(self, key, cntl, parent, valid = False):
         super(BlockBlob, self).__init__(key, cntl, parent, valid)
+        if self.valid:
+            self.data = array('B')
 
     @validate
     def __getitem__(self, index):
@@ -235,25 +256,10 @@ class BlockBlob(Blob):
             self.data.extend([0 for i in range(index - len(self.data) + 1)])
         self.data[index] = value
 
-    def getdata(self):
-        """
-        BlockBlob stores data locally as an array of bytes
-        """
-        if not hasattr(self, "_data"):
-            self._data = array('B')
-        return self._data
-
-    def setdata(self, value):
-        if not isinstance(value, BlockBlob.DATATYPE):
-            raise TypeError()
-        self._data = value
-
-    data = property(getdata, setdata)
-
-    def serializable_data(self):
+    def _serializable_data(self):
         return self.data.tostring()
 
-    def deserialize_data(self, data):
+    def _deserialize_data(self, data):
         self.data = array("B").fromstring()
 
     def data_as_string(self):
