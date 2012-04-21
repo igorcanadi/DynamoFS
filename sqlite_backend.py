@@ -2,6 +2,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import os
 
 # Construct the ORM for the SQLite database.
 Base = declarative_base()
@@ -25,8 +26,13 @@ class Datum(Base):
 class SQLiteBackend:
     # filename is the local file for the SQLite database.
     def __init__(self, filename):
+        self.filename = filename;
+        self.initSession()
+        
+    # Sets up the SQLAlchemy session object.
+    def initSession(self):
         # Open a connection to the database.
-        url = 'sqlite:///' + filename
+        url = 'sqlite:///' + self.filename
         engine = create_engine(url)
         
         # Create all the necessary tables. This will do nothing if the tables already exist.
@@ -77,3 +83,14 @@ class SQLiteBackend:
             self.session.delete(datum)
         
         self.session.commit()
+        
+    def nuke(self):
+        # Delete the backing store and reinitialize the session from a newly
+        # created, empty database.
+        try:
+            os.unlink(self.filename)
+        except OSError:
+            pass # The file must have never existed; that's fine.
+        
+        del self.session
+        self.initSession()

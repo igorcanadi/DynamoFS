@@ -1,4 +1,5 @@
 import cPickle
+import os
 
 # Tuple stored in the dict.
 class Datum:
@@ -41,3 +42,12 @@ class DictBackend:
         datum.refCount -= 1
         if datum.refCount == 0:
             del self.kvstore[key]
+            
+    def nuke(self):
+        # Destroy the backing store and revert the in-memory dict.
+        try:
+            os.unlink(self.filename)
+        except OSError:
+            pass # The file must have never existed; that's fine.
+        
+        self.kvstore = dict()

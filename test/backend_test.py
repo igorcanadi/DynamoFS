@@ -29,4 +29,18 @@ class BackendTest(unittest.TestCase):
         self.assertRaises(KeyError, backend.get, "Seth")
         backend.decRefCount("Igor") # Now garbage-collect Igor.
         self.assertRaises(KeyError, backend.get, "Igor")
-
+        
+        # Create some keys and then nuke them all.
+        backend.put("Nikita", "Khruschev")
+        backend.put("John", "Kennedy")
+        backend.put("Fidel", "Castro")
+        backend.nuke()
+        self.assertRaises(KeyError, backend.get, "Fidel")
+        self.assertRaises(KeyError, backend.get, "John")
+        self.assertRaises(KeyError, backend.get, "Nikita")
+        
+        # Test out nuking again, to make sure it still works.
+        backend.put("John", "Doe")
+        self.assertEqual(backend.get("John"), "Doe")
+        backend.nuke()
+        self.assertRaises(KeyError, backend.get, "John")

@@ -159,4 +159,6 @@ class DynamoDBBackend:
             self.useCapacity(result)
         except ConditionalCheckFailedException:
             pass # Do nothing. This just means the refCount was positive.
-        
+    
+    def nuke(self):
+        pass # TODO
