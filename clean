@@ -1,0 +1,4 @@
+rm *.class
+rm *.pyc
+rm test/*.class
+rm test/*.pyc

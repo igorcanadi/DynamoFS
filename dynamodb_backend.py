@@ -14,8 +14,10 @@ def addJarsFrom(dirPath, recursive):
             sys.path.append(jarPath)
 
 # Initialize the classpath and import AWS Java classes.
-addJarsFrom("aws-java-sdk-1.3.7/lib", False)
-addJarsFrom("aws-java-sdk-1.3.7/third-party", True)
+awsLib = "aws-java-sdk-1.3.8"
+addJarsFrom(awsLib + "/lib", False)
+addJarsFrom(awsLib + "/third-party", True)
+
 from java.io import *
 from java.util import *
 from com.amazonaws import *
@@ -161,4 +163,29 @@ class DynamoDBBackend:
             pass # Do nothing. This just means the refCount was positive.
     
     def nuke(self):
-        pass # TODO
+        while True:
+            # Issue a Scan request to learn the contents of the table.
+            request = (ScanRequest()
+                       .withTableName(TABLE_NAME)
+                       .withAttributesToGet(Collections.singleton(KEY)))
+            result = self.client.scan(request)
+            self.useCapacity(result)
+            
+            # If there are no items in the table, return.
+            if result.getCount() == 0:
+                return # We have emptied the table.
+            else:
+                # Build a list of delete requests, one for each record returned by
+                # the scan.
+                deleteRequests = ArrayList()
+                for item in result.getItems():
+                    key = self.apiKey(item.get(KEY).getS())
+                    deleteRequests.add(DeleteRequest()
+                                       .withKey(key))
+                
+                # Issue a BatchWriteItems request to delete the scanned items.
+                request = (BatchWriteItems()
+                           .withRequestItems(Collections.singletonMap(TABLE_NAME, deleteRequests)))
+                result = self.client.batchWriteItems(request)
+                self.useCapacity(result)
+                
