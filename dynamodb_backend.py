@@ -177,15 +177,16 @@ class DynamoDBBackend:
             else:
                 # Build a list of delete requests, one for each record returned by
                 # the scan.
-                deleteRequests = ArrayList()
+                writeRequests = ArrayList()
                 for item in result.getItems():
                     key = self.apiKey(item.get(KEY).getS())
-                    deleteRequests.add(DeleteRequest()
-                                       .withKey(key))
+                    writeRequests.add(WriteRequest()
+                                      .withDeleteRequest(DeleteRequest()
+                                                         .withKey(key)))
                 
                 # Issue a BatchWriteItems request to delete the scanned items.
-                request = (BatchWriteItems()
-                           .withRequestItems(Collections.singletonMap(TABLE_NAME, deleteRequests)))
-                result = self.client.batchWriteItems(request)
+                request = (BatchWriteItemRequest()
+                           .withRequestItems(Collections.singletonMap(TABLE_NAME, writeRequests)))
+                result = self.client.batchWriteItem(request).getResponses().get(TABLE_NAME)
                 self.useCapacity(result)
                 
