@@ -1,7 +1,5 @@
-from dict_backend import DictBackend
-from sqlite_backend import SQLiteBackend
-
-__author__ = 'sethpollen'
+# This file is just a generic library for testing backends. It does not contain
+# runnable testcases.
 
 import unittest
 
@@ -32,22 +30,3 @@ class BackendTest(unittest.TestCase):
         backend.decRefCount("Igor") # Now garbage-collect Igor.
         self.assertRaises(KeyError, backend.get, "Igor")
 
-class SQLiteBackendTest(BackendTest):
-    def setUp(self):
-        self.backend = SQLiteBackend('test/data/test.db')
-        
-    def tearDown(self):
-        del self.backend
-        
-    def runTest(self):
-        self.runTestWithBackend(self.backend)
-        
-class DictBackendTest(BackendTest):
-    def setUp(self):
-        self.backend = DictBackend('test/data/test.dat')
-        
-    def tearDown(self):
-        del self.backend
-        
-    def runTest(self):
-        self.runTestWithBackend(self.backend)

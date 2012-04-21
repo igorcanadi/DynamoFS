@@ -71,3 +71,7 @@ class MvTestCase(BasicTest):
         self.assertEqual(self.dfs.ls('/a'), ['test_dir', 'works'])
         self.dfs.mv('/a/', 'test_dir', 'pas')
         self.assertEqual(self.dfs.ls('/a'), ['works', 'pas'])
+
+if __name__ == '__main__':
+    unittest.main()
+

@@ -4,3 +4,5 @@ syntax: glob
 *.pyc
 test/data/*
 AwsCredentials.properties
+*py.class
+jython2.5.2/cachedir

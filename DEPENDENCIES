@@ -1,3 +1,17 @@
 Linux Packages:
   python-sqlite
   python-sqlalchemy
+
+Unfortunately, sqlite is not supported for Jython:
+  http://comments.gmane.org/gmane.comp.python.db.sqlite.user/300
+Thus, to run the SQLite testcases, you will have to use plain-old Python.
+
+A local installation of Jython (complete with SQLAlchemy) has been added to the repo,
+so no further configuration should be necessary. If it is, instructions are given here:
+
+  Jython:
+    Version 2.5 or later is required.
+  Notes:
+    To install sqlalchemy with jython, follow instructions here:
+      http://www.jython.org/jythonbook/en/1.0/DatabasesAndJython.html#sqlalchemy
+    Make sure to install version 0.6.8, as described by the instructions.

@@ -1,0 +1,227 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        
+        <title>
+                MaxDB
+             &mdash; SQLAlchemy 0.6.8 Documentation</title>
+        
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/docs.css" type="text/css" />
+
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+          URL_ROOT:    '../',
+          VERSION:     '0.6.8',
+          COLLAPSE_MODINDEX: false,
+          FILE_SUFFIX: '.html'
+      };
+    </script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/init.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+        <link rel="copyright" title="Copyright" href="../copyright.html" />
+    <link rel="top" title="SQLAlchemy 0.6.8 Documentation" href="../index.html" />
+        <link rel="up" title="Dialects" href="index.html" />
+        <link rel="next" title="Microsoft Access" href="access.html" />
+        <link rel="prev" title="Informix" href="informix.html" />
+
+    </head>
+    <body>
+        
+
+
+
+<h1>SQLAlchemy 0.6.8 Documentation</h1>
+
+<div id="search">
+Search:
+<form class="search" action="../search.html" method="get">
+  <input type="text" name="q" size="18" /> <input type="submit" value="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+</div>
+
+<div class="versionheader">
+    Version: <span class="versionnum">0.6.8</span> Last Updated: 06/05/2011 13:10:26
+</div>
+<div class="clearboth"></div>
+
+<div id="topnav">
+    <div id="pagecontrol">
+        <ul>
+            <li>Prev:
+            <a href="informix.html" title="previous chapter">Informix</a>
+            </li>
+            <li>Next:
+            <a href="access.html" title="next chapter">Microsoft Access</a>
+            </li>
+
+        <li>
+            <a href="../contents.html">Table of Contents</a> |
+            <a href="../genindex.html">Index</a>
+            | <a href="../_sources/dialects/maxdb.txt">view source
+        </li>
+        </ul>
+    </div>
+    <div id="navbanner">
+        <a class="totoc" href="../index.html">SQLAlchemy 0.6.8 Documentation</a>
+                » <a href="index.html" title="Dialects">Dialects</a>
+        » 
+                MaxDB
+             
+
+        <h2>
+            
+                MaxDB
+            
+        </h2>
+        <ul>
+<li><a class="reference internal" href="#">MaxDB</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#connecting">Connecting</a></li>
+<li><a class="reference internal" href="#implementation-notes">Implementation Notes</a><ul>
+<li><a class="reference internal" href="#sapdb-dbapi">sapdb.dbapi</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+    <div class="clearboth"></div>
+</div>
+
+<div class="document">
+    <div class="body">
+        
+<div class="section" id="module-sqlalchemy.dialects.maxdb.base">
+<span id="maxdb"></span><h1>MaxDB<a class="headerlink" href="#module-sqlalchemy.dialects.maxdb.base" title="Permalink to this headline">¶</a></h1>
+<p>Support for the MaxDB database.</p>
+<p>This dialect is <em>not</em> ported to SQLAlchemy 0.6 or 0.7.</p>
+<p>This dialect is <em>not</em> tested on SQLAlchemy 0.6 or 0.7.</p>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>The <tt class="docutils literal"><span class="pre">maxdb</span></tt> dialect is <strong>experimental</strong> and has only been tested on 7.6.03.007
+and 7.6.00.037.  Of these, <strong>only 7.6.03.007 will work</strong> with SQLAlchemy&#8217;s ORM.
+The earlier version has severe <tt class="docutils literal"><span class="pre">LEFT</span> <span class="pre">JOIN</span></tt> limitations and will return
+incorrect results from even very simple ORM queries.</p>
+<p>Only the native Python DB-API is currently supported.  ODBC driver support
+is a future enhancement.</p>
+</div>
+<div class="section" id="connecting">
+<h2>Connecting<a class="headerlink" href="#connecting" title="Permalink to this headline">¶</a></h2>
+<p>The username is case-sensitive.  If you usually connect to the
+database with sqlcli and other tools in lower case, you likely need to
+use upper case for DB-API.</p>
+</div>
+<div class="section" id="implementation-notes">
+<h2>Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permalink to this headline">¶</a></h2>
+<p>With the 7.6.00.37 driver and Python 2.5, it seems that all DB-API
+generated exceptions are broken and can cause Python to crash.</p>
+<p>For &#8216;somecol.in_([])&#8217; to work, the IN operator&#8217;s generation must be changed
+to cast &#8216;NULL&#8217; to a numeric, i.e. NUM(NULL).  The DB-API doesn&#8217;t accept a
+bind parameter there, so that particular generation must inline the NULL value,
+which depends on [ticket:807].</p>
+<p>The DB-API is very picky about where bind params may be used in queries.</p>
+<p>Bind params for some functions (e.g. MOD) need type information supplied.
+The dialect does not yet do this automatically.</p>
+<p>Max will occasionally throw up &#8216;bad sql, compile again&#8217; exceptions for
+perfectly valid SQL.  The dialect does not currently handle these, more
+research is needed.</p>
+<p>MaxDB 7.5 and Sap DB &lt;= 7.4 reportedly do not support schemas.  A very
+slightly different version of this dialect would be required to support
+those versions, and can easily be added if there is demand.  Some other
+required components such as an Max-aware &#8216;old oracle style&#8217; join compiler
+(thetas with (+) outer indicators) are already done and available for
+integration- email the devel list if you&#8217;re interested in working on
+this.</p>
+<p>Versions tested: 7.6.03.07 and 7.6.00.37, native Python DB-API</p>
+<ul class="simple">
+<li>MaxDB has severe limitations on OUTER JOINs, which are essential to ORM
+eager loading. And rather than raise an error if a SELECT can&#8217;t be serviced,
+the database simply returns incorrect results.</li>
+<li>Version 7.6.03.07 seems to JOIN properly, however the docs do not show the
+OUTER restrictions being lifted (as of this writing), and no changelog is
+available to confirm either. If you are using a different server version and
+your tasks require the ORM or any semi-advanced SQL through the SQL layer,
+running the SQLAlchemy test suite against your database is HIGHLY
+recommended before you begin.</li>
+<li>Version 7.6.00.37 is LHS/RHS sensitive in <cite>FROM lhs LEFT OUTER JOIN rhs ON
+lhs.col=rhs.col</cite> vs <cite>rhs.col=lhs.col</cite>!</li>
+<li>Version 7.6.00.37 is confused by <cite>SELECT DISTINCT col as alias FROM t ORDER
+BY col</cite> - these aliased, DISTINCT, ordered queries need to be re-written to
+order by the alias name.</li>
+<li>Version 7.6.x supports creating a SAVEPOINT but not its RELEASE.</li>
+<li>MaxDB supports autoincrement-style columns (DEFAULT SERIAL) and independent
+sequences. When including a DEFAULT SERIAL column in an insert, 0 needs to
+be inserted rather than NULL to generate a value.</li>
+<li>MaxDB supports ANSI and &#8220;old Oracle style&#8221; theta joins with (+) outer join
+indicators.</li>
+<li>The SQLAlchemy dialect is schema-aware and probably won&#8217;t function correctly
+on server versions (pre-7.6?). Support for schema-less server versions could
+be added if there&#8217;s call.</li>
+<li>ORDER BY is not supported in subqueries. LIMIT is not supported in
+subqueries. In 7.6.00.37, TOP does work in subqueries, but without limit not
+so useful. OFFSET does not work in 7.6 despite being in the docs. Row number
+tricks in WHERE via ROWNO may be possible but it only seems to allow
+less-than comparison!</li>
+<li>Version 7.6.03.07 can&#8217;t LIMIT if a derived table is in FROM: <cite>SELECT * FROM
+(SELECT * FROM a) LIMIT 2</cite></li>
+<li>MaxDB does not support sql&#8217;s CAST and can only usefullly cast two types.
+There isn&#8217;t much implicit type conversion, so be precise when creating
+<cite>PassiveDefaults</cite> in DDL generation: <cite>&#8216;3&#8217;</cite> and <cite>3</cite> aren&#8217;t the same.</li>
+</ul>
+<div class="section" id="sapdb-dbapi">
+<h3>sapdb.dbapi<a class="headerlink" href="#sapdb-dbapi" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>As of 2007-10-22 the Python 2.4 and 2.5 compatible versions of the DB-API
+are no longer available. A forum posting at SAP states that the Python
+driver will be available again &#8220;in the future&#8221;. The last release from MySQL
+AB works if you can find it.</li>
+<li>sequence.NEXTVAL skips every other value!</li>
+<li>No rowcount for executemany()</li>
+<li>If an INSERT into a table with a DEFAULT SERIAL column inserts the results
+of a function <cite>INSERT INTO t VALUES (LENGTH(&#8216;foo&#8217;))</cite>, the cursor won&#8217;t have
+the serial id. It needs to be manually yanked from tablename.CURRVAL.</li>
+<li>Super-duper picky about where bind params can be placed. Not smart about
+converting Python types for some functions, such as <cite>MOD(5, ?)</cite>.</li>
+<li>LONG (text, binary) values in result sets are read-once. The dialect uses a
+caching RowProxy when these types are present.</li>
+<li>Connection objects seem like they want to be either <a href="#id1"><span class="problematic" id="id2">`</span></a>close()`d or garbage
+collected, but not both. There&#8217;s a warning issued but it seems harmless.</li>
+</ul>
+</div>
+</div>
+</div>
+
+    </div>
+</div>
+
+
+    <div class="bottomnav">
+            Previous:
+            <a href="informix.html" title="previous chapter">Informix</a>
+            Next:
+            <a href="access.html" title="next chapter">Microsoft Access</a>
+        <div class="doc_copyright">
+            &copy; <a href="../copyright.html">Copyright</a> 2007-2011, the SQLAlchemy authors and contributors.
+            Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+        </div>
+    </div>
+
+
+
+
+    </body>
+</html>
+
+
+
