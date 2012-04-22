@@ -12,8 +12,17 @@ class DynamoFS:
     def __init__(self, server, root_filename):
         self.cntl = controller.Controller(server, root_filename)
         root_hash = self.cntl.get_root_hash()
-        # if root_hash == None, it means we don't have a root, so this just generates it
-        self.root = blob.DirectoryBlob(root_hash, self.cntl, None, root_hash == None)
+        try:
+            server.get(root_hash)
+        except KeyError:
+            # if what is in root filename doesn't exist
+            # we just create a new filetree
+            root_hash = None
+
+        # if root_hash == None, it means we don't have a root, 
+        # so this just generates it
+        self.root = blob.DirectoryBlob(root_hash, self.cntl, 
+                None, root_hash == None)
 
     def cleanup(self):
         self.root.recursiveFlush()

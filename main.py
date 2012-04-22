@@ -19,6 +19,7 @@ if __name__ == '__main__':
 
     f2 = dfs.open('/test_dir/pas', 'r')
     print f2.read(1000)
+    dfs.debug_output_whole_tree()
     dfs.cleanup()
 
     exit(1)

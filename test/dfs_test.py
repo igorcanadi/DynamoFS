@@ -1,4 +1,5 @@
 import dynamo_fs
+import os
 import dict_backend 
 
 __author__ = 'jpaton'
@@ -10,8 +11,11 @@ class BasicTest(unittest.TestCase):
     rootFilename = 'test/data/fs_root.txt'
 
     def setUp(self):
-        self.ss = dict_backend.DictBackend(MkdirLsTestCase.serverBackupFilename)
-        self.dfs = dynamo_fs.DynamoFS(self.ss, MkdirLsTestCase.rootFilename)
+        # we don't test persistence in these tests
+        os.system('rm ' + self.serverBackupFilename + ' 2> /dev/null')
+        os.system('rm ' + self.rootFilename + ' 2> /dev/null')
+        self.ss = dict_backend.DictBackend(self.serverBackupFilename)
+        self.dfs = dynamo_fs.DynamoFS(self.ss, self.rootFilename)
         print "Initial state"
         self.dfs.debug_output_whole_tree()
 
@@ -49,7 +53,7 @@ class OpenReadTestCase(OpenWriteTestCase):
     def runTest(self):
         super(OpenReadTestCase, self).runTest()
         somefile = self.dfs.open(OpenWriteTestCase.filename, "r")
-        self.assertEqual(OpenWriteTestCase.writtenString, somefile.read())
+        self.assertEqual(OpenWriteTestCase.writtenString, somefile.read(100))
         somefile.close()
 
 class RmTestCase(BasicTest):
