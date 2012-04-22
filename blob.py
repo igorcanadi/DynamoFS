@@ -260,7 +260,7 @@ class BlockBlob(Blob):
         return self.data.tostring()
 
     def _deserialize_data(self, data):
-        self.data = array("B").fromstring()
+        self.data = array("B").fromstring(data)
 
     def data_as_string(self):
         return "".join(map(chr, self.data))
