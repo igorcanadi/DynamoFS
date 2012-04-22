@@ -3,10 +3,36 @@ from array import array
 import cPickle
 import hashlib
 
+def dirties(fn):
+    """
+    This decorator marks a function as one that causes this blob to become dirty. It will take care of marking the blob
+    as dirty upon entry.
+    """
+    def wrapped(self, *args, **kwargs):
+        self.dirty = True
+        self._key = None
+        self._blob = None
+        return fn(self, *args, **kwargs)
+    return wrapped
+
+def validate(fn):
+    """
+    This decorator requires the blob to be valid before the function is entered. It takes care of testing for validity,
+    fetching data if needed, and marking the blob as valid.
+    """
+    def wrapped(self, *args, **kwargs):
+        if self.invalid:
+            self._deserialize_data(self.cntl.getdata(self._key))
+            self.dirty = False
+        self.valid = True
+        self._blob = None
+        return fn(self, *args, **kwargs)
+    return wrapped
+
 class Blob(object):
     def __init__(self, key, cntl, parent, valid = False):
         """
-        key is None if and only if valid is True.
+        _key is None if and only if valid is True.
         """
         if (key == None) != valid:
             raise
@@ -18,8 +44,12 @@ class Blob(object):
         self.cntl = cntl
 
     def flush(self):
+        """
+        If this Blob is dirty, flush it to the backing store using the controller's
+        putdata method. Also, if this Blob has a parent, call parent.flush(). If
+        this Blob does not have a parent, update the root on the controller.
+        """
         if self.dirty:
-#            (self.__key, value) = self._get_hash_and_blob()
             self.cntl.putdata(self.key, self.blob)
             # If i'm root, update root
             if self.parent == None:
@@ -29,9 +59,8 @@ class Blob(object):
             self.dirty = False
 
     def recursiveFlush(self):
-        if self.children != None:
-            for child in self.children:
-                child.recursiveFlush()
+        for child in self.children:
+            child.recursiveFlush()
         self.flush()
 
     @property
@@ -42,12 +71,11 @@ class Blob(object):
     def clean(self):
         return not self.dirty
 
-    def _serializable_data(self):
+    def _serialize_data(self):
         """
-        This method returns the blob's data in a form in which it can be serialized by
-        cPickle. Data may be, for example, a dict mapping filenames to keys (for a
-        directory), or a list of keys (for a block list), or a string representing a
-        list of bytes (for a block).
+        This method returns the blob's data serialized by cPickle.dumps. Data may be,
+        for example, a dict mapping filenames to keys (for a directory), or a list of
+        keys (for a block list), or a string representing a list of bytes (for a block).
         """
         raise NotImplementedError()
 
@@ -55,16 +83,17 @@ class Blob(object):
         """
         The parameter to this function is an object that was previously output by a call
         to serializable_data on a blob of this blob's type. It will use the data to
-        initialize this blob. For example, if
+        initialize this blob.
         """
         raise NotImplementedError()
 
     def _update_hash_and_blob(self):
 #        if self.dirty and self.valid:
-        if None in (self._key, self._blob):
-            cp = cPickle.dumps(self._serializable_data())
-            hash = hashlib.sha512(cp).hexdigest()
-            self._key, self._blob = hash, cp
+#        if self._blob == None:
+            self._blob = self._serialize_data()
+#        if self._key == None:
+            cp = self._blob
+            self._key = hashlib.sha512(cp).hexdigest()
 
     @property
     def key(self):
@@ -87,31 +116,6 @@ class Blob(object):
         self._dirty = value
 
     dirty = property(getdirty, setdirty)
-
-def dirties(fn):
-    """
-    This decorator marks a function as one that causes this blob to become dirty. It will take care of marking the blob
-    as dirty upon entry.
-    """
-    def wrapped(self, *args, **kwargs):
-        self.dirty = True
-        self.__key = None
-        return fn(self, *args, **kwargs)
-    return wrapped
-
-def validate(fn):
-    """
-    This decorator requires the blob to be valid before the function is entered. It takes care of testing for validity,
-    fetching data if needed, and marking the blob as valid.
-    """
-    def wrapped(self, *args, **kwargs):
-        if self.invalid:
-            self._deserialize_data(self.cntl.getdata(self.key))
-            self.dirty = False
-        self.valid = True
-        self.__blob = None
-        return fn(self, *args, **kwargs)
-    return wrapped
 
 class DirectoryBlob(Blob):
     # DATATYPE is the type that the data is stored in for this class
@@ -166,15 +170,15 @@ class DirectoryBlob(Blob):
     def children(self):
         return self.items.values()
 
-    def _serializable_data(self):
+    def _serialize_data(self):
         data = dict()
         for filename, blob in self.items.items():
             data[filename] = (blob.__class__, blob.key)
-        return data
+        return cPickle.dumps(data)
 
     def _deserialize_data(self, data):
         self.items = dict()
-        for filename, (itemclass, item) in data:
+        for filename, (itemclass, item) in cPickle.loads(data).items():
             self.items[filename] = itemclass(item, self.cntl, self)
 
 class BlockListBlob(Blob):
@@ -210,14 +214,14 @@ class BlockListBlob(Blob):
         # TODO: decrement reference count of deleted object
         del self.blocks[key]
 
-    def _serializable_data(self):
+    def _serialize_data(self):
         """
         Returns a list of the keys of the blocks in this block list.
         """
         data = list()
         for block in self.blocks:
             data.append(block.key)
-        return data
+        return cPickle.dumps(data)
 
     def _deserialize_data(self, data):
         """
@@ -225,7 +229,7 @@ class BlockListBlob(Blob):
         block list with invalid BlockBlob objects.
         """
         self.blocks = list()
-        for key in data:
+        for key in cPickle.loads(data):
             self.blocks.append(BlockBlob(key, self.cntl, self))
 
     @property
@@ -256,15 +260,21 @@ class BlockBlob(Blob):
             self.data.extend([0 for i in range(index - len(self.data) + 1)])
         self.data[index] = value
 
-    def _serializable_data(self):
-        return self.data.tostring()
+    def _serialize_data(self):
+        return cPickle.dumps(self.data.tostring())
 
     def _deserialize_data(self, data):
-        self.data = array("B").fromstring(data)
+        self.data = cPickle.loads(array("B").fromstring(data))
 
     def data_as_string(self):
+        """
+        Returns the data in this block as a string
+        """
         return "".join(map(chr, self.data))
 
     @property
     def children(self):
-        return None
+        """
+        Block's don't have children, so return an empty list.
+        """
+        return list()
