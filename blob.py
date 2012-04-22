@@ -32,10 +32,14 @@ def validate(fn):
 class Blob(object):
     def __init__(self, key, cntl, parent, valid = False):
         """
-        _key is None if and only if valid is True.
+        key: the key of the data that this blob represents.
+        cntl: the controller object this blob should use to access the backing store.
+        parent: the parent blob of this blob.
+        valid: whether this blob is valid -- that is, should the data be fetched from
+            the backend before this blob can be read?
         """
         if (key == None) != valid:
-            raise
+            raise Exception("Invariant violated for Blob constructor")
         self._key = key
         self._blob = None
         self.parent = parent
@@ -59,16 +63,25 @@ class Blob(object):
             self.dirty = False
 
     def recursiveFlush(self):
+        """
+        Calls recursiveFlush on all children, then calls flush on self.
+        """
         for child in self.children:
             child.recursiveFlush()
         self.flush()
 
     @property
     def invalid(self):
+        """
+        Convenience property. Returns not self.valid.
+        """
         return not self.valid
 
     @property
     def clean(self):
+        """
+        Convenience property. Returns not self.dirty.
+        """
         return not self.dirty
 
     def _serialize_data(self):
@@ -88,27 +101,45 @@ class Blob(object):
         raise NotImplementedError()
 
     def _update_hash_and_blob(self):
-#        if self.dirty and self.valid:
-#        if self._blob == None:
-            self._blob = self._serialize_data()
-#        if self._key == None:
-            cp = self._blob
-            self._key = hashlib.sha512(cp).hexdigest()
+        """
+        After this method is called, self._blob will contain the serialized representation
+        of this blob's data, and self._key will contain the hash of self._blob.
+        """
+        # TODO: optimize -- shouldn't have to regenerate this stuff every time
+        self._blob = self._serialize_data()
+        cp = self._blob
+        self._key = hashlib.sha512(cp).hexdigest()
 
     @property
     def key(self):
+        """
+        Returns the hash of this blob -- that is, the key under which this blob should
+        be stored in the backend. The returned key is guaranteed to be up-to-date according
+        to the data currently stored. Does not check for whether this blob is valid.
+        """
         self._update_hash_and_blob()
         return self._key
 
     @property
     def blob(self):
+        """
+        Returns the serialized data associated with this blob. This is the data that should
+        be stored in the backend. The serialized data is based on the current locally stored
+        data -- this method does not check for whether the blob is valid.
+        """
         self._update_hash_and_blob()
         return self._blob
 
     def getdirty(self):
+        """
+        Getter for dirty property -- tells you whether the blob has uncommitted changes.
+        """
         return self._dirty
 
     def setdirty(self, value):
+        """
+        Setter for dirty property -- tells you whether the blob has uncommitted changes.
+        """
         if not isinstance(value, bool):
             raise TypeError("dirty variable can be only True or False")
         if value == True and self.parent != None:
@@ -117,10 +148,35 @@ class Blob(object):
 
     dirty = property(getdirty, setdirty)
 
-class DirectoryBlob(Blob):
-    # DATATYPE is the type that the data is stored in for this class
-    DATATYPE = dict
+    @property
+    def children(self):
+        """
+        Each subclass should implement this method to return a list of Blob objects, each
+        of which is a child of the current object. DirectoryBlobs should return a list of
+        subdirectories/files; BlockListBlobs should return a list of BlockBlobs; BlockBlobs
+        should return an empty list.
+        """
+        raise NotImplementedError()
 
+class DirectoryBlob(Blob):
+    """
+    Represents a directory. Can be used like a dict. Example usage:
+    >>> dirblob = DirectoryBlob(None, cntl, None, True)
+    >>> dirblob['usr'] = DirectoryBlob(None, cntl, dirblob, True)
+    >>> dirblob['usr']['bin'] = DirectoryBlob(None, cntl, dirblob['usr'], True)
+    >>> dirblob['usr']['bin']['README'] = BlockListBlob(none, cntl, dirblob['usr']['bin'], True)
+    The file system now looks like this:
+    usr
+        bin
+            README
+    where usr and bin are directories and README is a file.
+
+    Delete items like so:
+    >>> del dirblob['usr']['bin']['README']
+
+    To flush everything, including the children, do:
+    >>> dirblob.recursiveFlush()
+    """
     def __init__(self, key, cntl, parent = None, valid = False):
         super(DirectoryBlob, self).__init__(key, cntl, parent, valid)
         if valid:
@@ -182,9 +238,17 @@ class DirectoryBlob(Blob):
             self.items[filename] = itemclass(item, self.cntl, self)
 
 class BlockListBlob(Blob):
-    # DATATYPE is the type that the data is stored in for this class
-    DATATYPE = list
-
+    """
+    Represents a block list. Can be accessed like a list. For example:
+    >>> blocks = BlockListBlob(None, cntl, parent, True)
+    >>> blocks[0][0] = "H"
+    >>> print chr(blocks[0][0])
+    H
+    >>> blocks[0].extend(array("B", "ello, world!"))
+    >>> print map(chr, blocks[0])
+    Hello, world!
+    Each element in this object is a BlockBlob.
+    """
     def __init__(self, key, cntl, parent, valid = False):
         super(BlockListBlob, self).__init__(key, cntl, parent, valid)
         if valid:
@@ -237,9 +301,16 @@ class BlockListBlob(Blob):
         return self.blocks
 
 class BlockBlob(Blob):
-    # DATATYPE is the type that the data is stored in for this class
-    DATATYPE = array
+    """
+    Represents a block of data. Can be treated like an array. The underlying representation
+    used is array.array. Example usage:
+    >>> block = BlockBlob(None, cntl, parent, True)
+    >>> print block.data_as_string()
 
+    >>> block.extend(array("B", "Good bye."))
+    >>> print block.data_as_string()
+    Good bye.
+    """
     def __init__(self, key, cntl, parent, valid = False):
         super(BlockBlob, self).__init__(key, cntl, parent, valid)
         if self.valid:
@@ -259,6 +330,25 @@ class BlockBlob(Blob):
             # TODO: test against PAGE_SIZE
             self.data.extend([0 for i in range(index - len(self.data) + 1)])
         self.data[index] = value
+
+    @validate
+    @dirties
+    def append(self, value):
+        """
+        Appends value to this block's data. Value must be an integer.
+        """
+        # TODO: test against PAGE_SIZE
+        self.data.append(value)
+
+    @validate
+    @dirties
+    def extend(self, values):
+        """
+        Appends each of a list of values to this block's data. The values must
+        be integers.
+        """
+        # TODO: test against PAGE_SIZE
+        self.data.extend(values)
 
     def _serialize_data(self):
         return cPickle.dumps(self.data.tostring())
