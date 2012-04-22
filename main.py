@@ -1,7 +1,7 @@
 from controller import Controller 
 import dynamo_fs
 import dict_backend
-import sqlite_backend
+#import sqlite_backend
 import blob 
 import hashlib
 import cPickle
@@ -16,6 +16,12 @@ if __name__ == '__main__':
     print f.blob.key
     f.write('ja sam mali pas')
     f.close()
+
+    f2 = dfs.open('/test_dir/pas', 'r')
+    print f2.read(1000)
+    dfs.cleanup()
+
+    exit(1)
 
     k = dfs.get_key_for_sharing('/test_dir')
     dfs.attach_shared_key('/test_dir/', 'new_test_dir', k)

@@ -362,6 +362,9 @@ class BlockBlob(Blob):
         """
         return "".join(map(chr, self.data))
 
+    def size(self):
+        return len(self.data)
+
     @property
     def children(self):
         """
