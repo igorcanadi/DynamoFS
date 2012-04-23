@@ -1,4 +1,5 @@
 import dynamo_fs
+import file
 import os
 import dict_backend 
 
@@ -105,6 +106,43 @@ class SharingTestCase(BasicTest):
         f2.close()
         self.assertEqual(f1.read(100), 'harry potter (DONE); star wars')
         self.assertEqual(f2.read(100), 'harry potter; star wars')
+
+class SimpleSeekTestCase(BasicTest):
+    def runTest(self):
+        super(SimpleSeekTestCase, self).runTest()
+        somefile = self.dfs.open('/majmun', "w")
+        somefile.write('ja sam mali majmun')
+        somefile.close()
+        somefile = self.dfs.open('/majmun', "r")
+        self.assertEqual(somefile.read(3), 'ja ')
+        self.assertEqual(somefile.read(3), 'sam')
+        self.assertEqual(somefile.read(100), ' mali majmun')
+        somefile.seek(2, file.SEEK_SET)
+        self.assertEqual(somefile.read(6), ' sam m')
+        somefile.seek(-2, file.SEEK_END)
+        self.assertEqual(somefile.read(100), 'un')
+        somefile.seek(0, file.SEEK_SET)
+        self.assertEqual(somefile.read(3), 'ja ')
+        somefile.seek(4, file.SEEK_CUR)
+        self.assertEqual(somefile.read(11), 'mali majmun')
+
+class BigSeekTestCase(BasicTest):
+    def runTest(self):
+        super(BigSeekTestCase, self).runTest()
+        somefile = self.dfs.open('/veliki_majmun', "w")
+        somefile.write(['a' if t < 4096 else 'b' for t in range(5500)])
+        somefile.close()
+        somefile = self.dfs.open('/veliki_majmun', "r")
+        self.assertEqual(somefile.read(3000), "".join(['a' for i in range(3000)]))
+        self.assertEqual(somefile.read(2000), "".join(['a' for i in range(1096)]) + "".join(['b' for i in range(904)]))
+        somefile.seek(4, file.SEEK_SET)
+        self.assertEqual(somefile.read(2), 'aa')
+        somefile.seek(4095, file.SEEK_SET)
+        self.assertEqual(somefile.read(2), 'ab')
+        somefile.seek(4500, file.SEEK_SET)
+        self.assertEqual(somefile.read(2), 'bb')
+        somefile.seek(-4500, file.SEEK_END)
+        self.assertEqual(somefile.read(2), 'aa')
 
 
 if __name__ == '__main__':
