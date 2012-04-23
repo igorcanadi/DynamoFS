@@ -12,9 +12,10 @@ class BasicTest(unittest.TestCase):
 
     def setUp(self):
         # we don't test persistence in these tests
-        os.system('rm ' + self.serverBackupFilename + ' 2> /dev/null')
-        os.system('rm ' + self.rootFilename + ' 2> /dev/null')
+        # start with clean plate
         self.ss = dict_backend.DictBackend(self.serverBackupFilename)
+        self.ss.nuke()
+        os.unlink(self.rootFilename)
         self.dfs = dynamo_fs.DynamoFS(self.ss, self.rootFilename)
         print "Initial state"
         self.dfs.debug_output_whole_tree()
