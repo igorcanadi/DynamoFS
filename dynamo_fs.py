@@ -82,7 +82,6 @@ class DynamoFS:
     def attach_shared_key(self, path, filename, key):
         target = self._find_leaf(path)
         target[filename] = blob.DirectoryBlob(key, self.cntl, target, False)
-        print target[filename].data
 
     def _output_whole_tree(self, node, level):
         if isinstance(node, blob.DirectoryBlob):

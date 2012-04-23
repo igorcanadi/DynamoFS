@@ -297,6 +297,7 @@ class BlockListBlob(Blob):
             self.blocks.append(BlockBlob(key, self.cntl, self))
 
     @property
+    @validate
     def children(self):
         return self.blocks
 
@@ -354,8 +355,10 @@ class BlockBlob(Blob):
         return cPickle.dumps(self.data.tostring())
 
     def _deserialize_data(self, data):
-        self.data = cPickle.loads(array("B").fromstring(data))
+        self.data = array("B")
+        self.data.fromstring(cPickle.loads(data))
 
+    @validate
     def data_as_string(self):
         """
         Returns the data in this block as a string

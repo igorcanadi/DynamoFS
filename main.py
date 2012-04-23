@@ -17,23 +17,12 @@ if __name__ == '__main__':
     f.write('ja sam mali pas')
     f.close()
 
-    f2 = dfs.open('/test_dir/pas', 'r')
-    print f2.read(1000)
     dfs.debug_output_whole_tree()
-    dfs.cleanup()
-
-    exit(1)
-
     k = dfs.get_key_for_sharing('/test_dir')
     dfs.attach_shared_key('/test_dir/', 'new_test_dir', k)
-    print dfs.ls('/test_dir')
-    print dfs.ls('/test_dir/new_test_dir')
+    dfs.debug_output_whole_tree()
+    f = dfs.open('/test_dir/new_test_dir/pas', 'r')
+    print f.read(200)
+
     dfs.cleanup()
     ss.cleanup()
-    f = dfs.open('/test_dir/new_test_dir/pas', 'r')
-    print f.blob.key
-    print f.read()
-    f = dfs.open('/test_dir/pas', 'r')
-    print f.blob.key
-
-
