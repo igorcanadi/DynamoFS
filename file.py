@@ -51,13 +51,13 @@ class File:
     # (until data is actually written into the gap).
     def seek(self, offset, whence):
         if whence == SEEK_SET:
-            self._offset = (offset / PAGE_SIZE, offset % PAGE_SIZE)
+            self._offset = [offset / PAGE_SIZE, offset % PAGE_SIZE]
         elif whence == SEEK_CUR:
             self.seek(self._offset[0] * PAGE_SIZE + self._offset[1] + offset, SEEK_SET)
         elif whence == SEEK_END:
             last_block = len(self.blob.children) - 1
             file_len = last_block * PAGE_SIZE + self.blob[last_block].size()
-            self.seek(file_len + offset)
+            self.seek(file_len + offset, SEEK_SET)
 
     def close(self):
         self.blob.flush()
