@@ -56,7 +56,10 @@ class File:
             self.seek(self._offset[0] * PAGE_SIZE + self._offset[1] + offset, SEEK_SET)
         elif whence == SEEK_END:
             last_block = len(self.blob.children) - 1
-            file_len = last_block * PAGE_SIZE + self.blob[last_block].size()
+            if last_block == -1:
+                file_len = 0
+            else:
+                file_len = last_block * PAGE_SIZE + self.blob[last_block].size()
             self.seek(file_len + offset, SEEK_SET)
 
     def close(self):
