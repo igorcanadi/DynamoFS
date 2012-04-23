@@ -1,0 +1,3 @@
+We need a file in this folder so that the folder is created when checked out from git.
+Otherwise, the tests will fail to find the folder when they try to put data files into
+it.
