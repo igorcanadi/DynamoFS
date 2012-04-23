@@ -28,7 +28,7 @@ class File:
 
     def write(self, data):
         if self.mode != 'w':
-            raise Exception('not writtable, sorry')
+            raise Exception('Not writable, sorry')
 
         for d in data:
             self.blob[self._offset[0]][self._offset[1]] = ord(d)
@@ -36,7 +36,7 @@ class File:
 
     def read(self, max_len):
         if self.mode != 'r':
-            raise Exception('not readable, sorry')
+            raise Exception('Not readable, sorry')
         ret = ""
         for i in range(max_len):
             if self._offset_at_the_end():

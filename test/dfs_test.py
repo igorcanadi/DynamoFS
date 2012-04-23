@@ -16,7 +16,10 @@ class BasicTest(unittest.TestCase):
         # start with clean plate
         self.ss = dict_backend.DictBackend(self.serverBackupFilename)
         self.ss.nuke()
-        os.unlink(self.rootFilename)
+        try:
+          os.unlink(self.rootFilename)
+        except:
+          pass
         self.dfs = dynamo_fs.DynamoFS(self.ss, self.rootFilename)
         print "Initial state"
         self.dfs.debug_output_whole_tree()

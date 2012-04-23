@@ -2,9 +2,11 @@ import blob
 import controller
 import file
 
+# Splits a path into a list of component names.
 def _get_plist(path):
     return filter(len, path.split('/'))
 
+# Gets the leaf name for a path.
 def _get_leaf_filename(path):
     return _get_plist(path)[-1]
 
