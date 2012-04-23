@@ -111,6 +111,7 @@ class Blob(object):
         self._key = hashlib.sha512(cp).hexdigest()
 
     @property
+    @validate
     def key(self):
         """
         Returns the hash of this blob -- that is, the key under which this blob should
@@ -121,6 +122,7 @@ class Blob(object):
         return self._key
 
     @property
+    @validate
     def blob(self):
         """
         Returns the serialized data associated with this blob. This is the data that should
@@ -365,6 +367,7 @@ class BlockBlob(Blob):
         """
         return "".join(map(chr, self.data))
 
+    @validate
     def size(self):
         return len(self.data)
 

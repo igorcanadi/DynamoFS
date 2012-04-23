@@ -13,7 +13,6 @@ if __name__ == '__main__':
     dfs.mkdir('/', 'test_dir')
     dfs.mkdir('/test_dir', 'win')
     f = dfs.open('/test_dir/pas', 'w')
-    print f.blob.key
     f.write('ja sam mali pas')
     f.close()
 
@@ -21,8 +20,9 @@ if __name__ == '__main__':
     k = dfs.get_key_for_sharing('/test_dir')
     dfs.attach_shared_key('/test_dir/', 'new_test_dir', k)
     dfs.debug_output_whole_tree()
-    f = dfs.open('/test_dir/new_test_dir/pas', 'r')
-    print f.read(200)
+    f = dfs.open('/test_dir/new_test_dir/pas', 'w')
+    f.write('ja sam mali majmun')
+    dfs.debug_output_whole_tree()
 
     dfs.cleanup()
     ss.cleanup()

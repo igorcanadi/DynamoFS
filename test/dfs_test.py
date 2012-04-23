@@ -77,6 +77,36 @@ class MvTestCase(BasicTest):
         self.dfs.mv('/a/', 'test_dir', 'pas')
         self.assertEqual(self.dfs.ls('/a'), ['works', 'pas'])
 
+class SharingTestCase(BasicTest):
+    def runTest(self):
+        super(SharingTestCase, self).runTest()
+        self.dfs.mkdir('/', 'movies')
+        self.dfs.mkdir('/movies', 'romantic_comedies')
+        f = self.dfs.open('/movies/to_watch', 'w')
+        f.write('harry potter; star wars')
+        f.close()
+        k = self.dfs.get_key_for_sharing('/movies')
+        self.dfs.attach_shared_key('/movies/', 'shared_movies', k)
+        self.assertEqual(sorted(self.dfs.ls('/movies')), 
+                sorted(['romantic_comedies', 'to_watch', 'shared_movies']))
+        self.assertEqual(sorted(self.dfs.ls('/movies/shared_movies')), 
+                sorted(['romantic_comedies', 'to_watch']))
+        f1 = self.dfs.open('/movies/to_watch', 'r')
+        f2 = self.dfs.open('/movies/shared_movies/to_watch', 'r')
+        self.assertEqual(f1.read(100), f2.read(100))
+        f1.close()
+        f2.close()
+        f2 = self.dfs.open('/movies/to_watch', 'w')
+        f2.write('harry potter (DONE); star wars')
+        f2.close()
+        f1 = self.dfs.open('/movies/to_watch', 'r')
+        f2 = self.dfs.open('/movies/shared_movies/to_watch', 'r')
+        f1.close()
+        f2.close()
+        self.assertEqual(f1.read(100), 'harry potter (DONE); star wars')
+        self.assertEqual(f2.read(100), 'harry potter; star wars')
+
+
 if __name__ == '__main__':
     unittest.main()
 
