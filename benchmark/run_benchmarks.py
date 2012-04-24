@@ -9,26 +9,18 @@ import bench_mkdir_ls
 import time
 
 backingFile = 'benchmarks.db'
-backend = DictBackend(backingFile)
+backend = DictBackend(backingFile, 0.001)
 
-start = time.time()
-
-""" # Append benchmark. 
+print '*** Append benchmark ***' 
 depth = 10
 samples = 10
 size = 100
 results = bench_append.run(backend, depth, samples, size)
 print 'Mean append time: ' + str(results.mean()) + ' sec'
-"""
 
-# Mkdir benchmark.
+print '*** Mkdir benchmark ***'
 depth = 5
 spread = 5
 mkdirResults, lsResults = bench_mkdir_ls.run(backend, depth, spread)
 print 'Mean mkdir time: ' + str(mkdirResults.mean()) + ' sec'
 print 'Mean ls time: ' + str(lsResults.mean()) + ' sec'
-
-end = time.time()
-
-
-print 'Total test time: ' + str(end - start) + ' sec'

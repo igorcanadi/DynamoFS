@@ -13,7 +13,7 @@ def run(backend, depth, samples, size):
     
     # Set up the test by creating a chain of directories to work in.
     cwd = makeDepth(fs, '/', depth)
-    filename = appendToPath(cwd, 'file')
+    filename = dynamo_fs.concatPath(cwd, 'file')
     
     # Perform benchmarking.    
     sampler = BenchmarkTimer()
