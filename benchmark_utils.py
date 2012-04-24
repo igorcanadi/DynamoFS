@@ -4,6 +4,7 @@ import time
 import dynamo_fs
 import os
 import random
+import math
 
 # Collects timing samples during benchmarking.
 class BenchmarkTimer:
@@ -20,6 +21,13 @@ class BenchmarkTimer:
         
     def mean(self):
         return sum(self.samples) / len(self.samples)
+    
+    def stddev(self):
+        mean = self.mean()
+        variance = 0.0
+        for s in self.samples:
+            variance += (s - mean) ** 2.0
+        return math.sqrt(variance) 
 
 # Creates a clean, empty DynamoFS object.
 def emptyFs(backend, rootFilename):

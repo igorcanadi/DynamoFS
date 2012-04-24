@@ -1,6 +1,7 @@
 import sys
 import os
-   
+import benchmark_utils
+
 # Adds all the jar files in a directory to the path. Setting "recursive" to True
 # will cause this method to descending into directories, searching for JARs.
 def addJarsFrom(dirPath, recursive):
@@ -36,6 +37,8 @@ REF_COUNT = "r"
 # Thresholds mandated by Amazon.
 MAX_BATCH_SIZE = 25 # Maximum number of items in a BatchWriteItemsRequest.
 
+# Get a feel for server-side latencies.
+sampler = benchmark_utils.BenchmarkTimer()
 
 # Backend driven by DynamoDB. We use one table called "data", which has the
 # following columns:
@@ -68,6 +71,8 @@ class DynamoDBBackend:
     def put(self, key, value):
         key = self.apiKey(key)
         
+        sampler.begin()
+        
         # Issue an UpdateItem request that atomically increments the refCount
         # and puts the value. This will transparently create the item if it
         # isn't there already.
@@ -89,10 +94,14 @@ class DynamoDBBackend:
                    .withAttributeUpdates(updates))
         result = self.client.updateItem(request)
         self.useCapacity(result)
+        
+        sampler.end()
 
 
     def get(self, key):
         key = self.apiKey(key)
+        
+        sampler.begin()
         
         # Issue an eventually-consistent GetItem request.
         request = (GetItemRequest()
@@ -118,10 +127,13 @@ class DynamoDBBackend:
             
             else: # The key must not exist in the database.
                 raise KeyError
+            
+        
+        sampler.end()
 
 
     # Issues a request to add a specific delta value (integer) to the refCount for a key.
-    def addToRefCount(self, key, delta):
+    def _addToRefCount(self, key, delta):
         # Issue an UpdateItem request to increment the refCount.
         updates = HashMap()
         
@@ -141,15 +153,21 @@ class DynamoDBBackend:
     def incRefCount(self, key):
         key = self.apiKey(key)
         
+        sampler.begin()
+        
         # Issue an UpdateItem request to increment the refCount.
-        self.addToRefCount(key, 1)
+        self._addToRefCount(key, 1)
+        
+        sampler.end()
         
         
     def decRefCount(self, key):
         key = self.apiKey(key)
         
+        sampler.begin()
+        
         # Issue an UpdateItem request to decrement the refCount.
-        self.addToRefCount(key, -1)
+        self._addToRefCount(key, -1)
         
         # Atomically delete the item, if its reference count is zero.
         expectation = HashMap()
@@ -168,6 +186,8 @@ class DynamoDBBackend:
             self.useCapacity(result)
         except ConditionalCheckFailedException:
             pass # Do nothing. This just means the refCount was positive.
+        
+        sampler.end()
     
     def nuke(self):
         while True:

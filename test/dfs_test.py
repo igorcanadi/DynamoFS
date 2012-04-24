@@ -54,6 +54,18 @@ class OpenWriteTestCase(MkdirLsTestCase):
         somefile.write(OpenWriteTestCase.writtenString)
         somefile.close()
 
+class IsDirTestCase(BasicTest):
+    def runTest(self):
+        super(IsDirTestCase, self).runTest()
+        self.dfs.mkdir('/', 'b')
+        somefile = self.dfs.open('/b/a', "w")
+        somefile.write('bla')
+        somefile.close()
+        self.assertEqual(self.dfs.isdir('/'), True)
+        self.assertEqual(self.dfs.isdir('/b'), True)
+        self.assertEqual(self.dfs.isdir('/b/a'), False)
+        
+
 class OpenReadTestCase(OpenWriteTestCase):
     def runTest(self):
         super(OpenReadTestCase, self).runTest()
