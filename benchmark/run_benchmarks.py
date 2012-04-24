@@ -1,4 +1,5 @@
-# Runs benchmarks on a DictBackend.
+# Runs benchmarks on a DictBackend. This is just a batch script for running
+# at the terminal; feel free to edit as you need.
 
 from dict_backend import DictBackend
 from sqlite_backend import SQLiteBackend
@@ -6,7 +7,8 @@ from dynamodb_backend import DynamoDBBackend
 import bench_append
 import time
 
-backend = DynamoDBBackend()
+backingFile = 'benchmarks.db'
+backend = DictBackend(backingFile)
 
 depth = 10
 samples = 10

@@ -13,6 +13,13 @@ def _get_plist(path):
 def _get_leaf_filename(path):
     return _get_plist(path)[-1]
 
+# Appends a child name to an existing parent path.
+def concatPath(parent, child):
+    if parent.endswith('/'):
+        return parent + child
+    else:
+        return parent + '/' + child
+
 class DynamoFS:
     def __init__(self, server, root_filename):
         self.cntl = controller.Controller(server, root_filename)

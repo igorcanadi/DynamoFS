@@ -1,7 +1,6 @@
 # Benchmark for appending to files.
 
 from benchmark_utils import *
-import random
 from file import SEEK_END
 
 # backend - a backend to use
@@ -13,22 +12,14 @@ def run(backend, depth, samples, size):
     fs = emptyFs(backend, 'benchmark/data/fs_root.txt')
     
     # Set up the test by creating a chain of directories to work in.
-    cwd = ''
-    for i in range(0, depth):
-        # Make up a random 5-character name for this directory.
-        name = str(random.randint(10000, 99999))
-        fs.mkdir(cwd, name)
-        cwd += '/' + name
+    cwd = makeDepth(fs, '/', depth)
+    filename = appendToPath(cwd, 'file')
     
     # Perform benchmarking.    
     sampler = BenchmarkTimer()
-    filename = cwd + '/file'
-    
-    for i in range(0, samples):
+    for _ in range(0, samples):
         # Generate a random (printable) string to write.
-        text = ''
-        for j in range(0, size):
-            text += chr(random.randint(32, 126))
+        text = randomString(size)
     
         # For each sample, open the file, seek to the end, and write some bytes.
         sampler.begin()
