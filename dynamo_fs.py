@@ -3,7 +3,7 @@ import controller
 import cache_manager
 import file
 
-CACHE_SIZE = 10000
+CACHE_SIZE = 10000 # TODO what are the units for this?
 
 # Splits a path into a list of component names.
 def _get_plist(path):

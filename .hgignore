@@ -5,3 +5,4 @@ AwsCredentials.properties
 *py.class
 jython2.5.2/cachedir
 benchmark/data/fs_root.txt
+*.db
