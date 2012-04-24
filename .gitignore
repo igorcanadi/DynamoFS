@@ -1,2 +1,7 @@
 *.pyc
 AwsCredentials.properties
+fs_root.txt
+server_stub_backup.dat
+sqlite.db
+test/data/fs_root.txt
+test/data/server_stub_backup.dat
