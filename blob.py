@@ -48,6 +48,7 @@ class Blob(object):
         self.cntl = cntl
         self.cache_manager = cache_manager
 
+    @validate
     def evict(self):
         """ 
         This is called by a cache manager to let me know that I need to 
