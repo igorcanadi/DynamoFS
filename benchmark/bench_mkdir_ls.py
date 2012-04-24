@@ -3,14 +3,12 @@
 
 from benchmark_utils import *
 
-# backend - a backend to use
+# fs - an empty filesystem to use
 # depth - depth of the directory tree to create
 # spread - number of children to populate in each directory in the tree.
 # Returns a tuple of samplers: the first one contains data for mkdir calls; the
 # second contains data for ls calls.
-def run(backend, depth, spread):
-    fs = emptyFs(backend, 'benchmark/data/fs_root.txt')
-    
+def run(fs, depth, spread):
     mkdirSampler = BenchmarkTimer()
     lsSampler = BenchmarkTimer()
     

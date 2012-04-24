@@ -3,14 +3,12 @@
 from benchmark_utils import *
 from file import SEEK_END
 
-# backend - a backend to use
+# fs - an empty filesystem to use
 # depth - depth at which to work. This controls how many directories deep
 #         we store the file that receives the append traffic.
 # samples - number of appends to do
 # size - size (in bytes) of each append
-def run(backend, depth, samples, size):
-    fs = emptyFs(backend, 'benchmark/data/fs_root.txt')
-    
+def run(fs, depth, samples, size):
     # Set up the test by creating a chain of directories to work in.
     cwd = makeDepth(fs, '/', depth)
     filename = dynamo_fs.concatPath(cwd, 'file')

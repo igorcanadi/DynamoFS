@@ -1,26 +1,38 @@
 # Runs benchmarks on a DictBackend. This is just a batch script for running
 # at the terminal; feel free to edit as you need.
 
-from dict_backend import DictBackend
-from sqlite_backend import SQLiteBackend
-#from dynamodb_backend import DynamoDBBackend
+#from dict_backend import DictBackend
+#from sqlite_backend import SQLiteBackend
+import dynamodb_backend
 import bench_append
 import bench_mkdir_ls
-import time
+from benchmark_utils import *
 
 backingFile = 'benchmarks.db'
-backend = DictBackend(backingFile, 0.001)
+backend = dynamodb_backend.DynamoDBBackend()
 
+fs = emptyFs(backend, 'benchmark/data/fs_root.txt')
+
+cap = backend.capacityUsed
 print '*** Append benchmark ***' 
 depth = 10
 samples = 10
-size = 100
-results = bench_append.run(backend, depth, samples, size)
+size = 50
+results = bench_append.run(fs, depth, samples, size)
 print 'Mean append time: ' + str(results.mean()) + ' sec'
+print 'Capacity used: ' + str(backend.capacityUsed - cap)
 
+fs = emptyFs(backend, 'benchmark/data/fs_root.txt')
+
+cap = backend.capacityUsed
 print '*** Mkdir benchmark ***'
 depth = 5
-spread = 5
-mkdirResults, lsResults = bench_mkdir_ls.run(backend, depth, spread)
+spread = 4
+mkdirResults, lsResults = bench_mkdir_ls.run(fs, depth, spread)
 print 'Mean mkdir time: ' + str(mkdirResults.mean()) + ' sec'
 print 'Mean ls time: ' + str(lsResults.mean()) + ' sec'
+print 'Capacity used: ' + str(backend.capacityUsed - cap)
+
+print '### Backend statistics:'
+print ('Mean request latency (std-dev): ' + str(dynamodb_backend.sampler.mean()) +
+       ' (' + str(dynamodb_backend.sampler.stddev()) + ')')
