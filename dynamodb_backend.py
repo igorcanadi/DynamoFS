@@ -33,6 +33,9 @@ KEY = "k"
 VALUE = "v"
 REF_COUNT = "r"
 
+# Thresholds mandated by Amazon.
+MAX_BATCH_SIZE = 25 # Maximum number of items in a BatchWriteItemsRequest.
+
 
 # Backend driven by DynamoDB. We use one table called "data", which has the
 # following columns:
@@ -179,18 +182,27 @@ class DynamoDBBackend:
             if result.getCount() == 0:
                 return # We have emptied the table.
             else:
-                # Build a list of delete requests, one for each record returned by
-                # the scan.
-                writeRequests = ArrayList()
-                for item in result.getItems():
-                    key = self.apiKey(item.get(KEY).getS())
-                    writeRequests.add(WriteRequest()
-                                      .withDeleteRequest(DeleteRequest()
-                                                         .withKey(key)))
+                itemsToDelete = result.getItems()
                 
-                # Issue a BatchWriteItems request to delete the scanned items.
-                request = (BatchWriteItemRequest()
-                           .withRequestItems(Collections.singletonMap(TABLE_NAME, writeRequests)))
-                result = self.client.batchWriteItem(request).getResponses().get(TABLE_NAME)
-                self.useCapacity(result)
-                
+                # Delete the items, sending multiple BatchWriteRequests if the number
+                # of items exceeds the ceiling.
+                total = itemsToDelete.size()
+                index = 0
+                while index < total:
+                    # Build a list of delete requests for the records returned by the scan.
+                    writeRequests = ArrayList()
+                    batchSize = 0
+                    while (index < total) and (batchSize < MAX_BATCH_SIZE):
+                        key = self.apiKey(itemsToDelete.get(index).get(KEY).getS())
+                        writeRequests.add(WriteRequest()
+                                          .withDeleteRequest(DeleteRequest()
+                                                             .withKey(key)))
+                        index += 1
+                        batchSize += 1
+                    
+                    # Issue a BatchWriteItems request to delete the scanned items.
+                    request = (BatchWriteItemRequest()
+                               .withRequestItems(Collections.singletonMap(TABLE_NAME, writeRequests)))
+                    result = self.client.batchWriteItem(request).getResponses().get(TABLE_NAME)
+                    self.useCapacity(result)
+                    
