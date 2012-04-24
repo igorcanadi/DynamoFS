@@ -53,6 +53,8 @@ class Blob(object):
         This is called by a cache manager to let me know that I need to 
         evict my data field from main memory
         """
+        if self.dirty:
+            self.flush()
         self._blob = None
 
     def flush(self):
