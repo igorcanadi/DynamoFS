@@ -65,7 +65,7 @@ class Blob(object):
         up-to-date state.
         """
         for child in self.children:
-            child.commit()
+            child._flushDown()
         self._flushUp()
 
     def _flushUp(self):
@@ -76,11 +76,21 @@ class Blob(object):
         """
         if self.clean:
             return
-        self.cntl.putdata(self.key, self.blob)
+        self._flush()
         if self.parent != None:
             self.parent._flushUp()
         else:
             self.cntl.update_root(self.key)
+
+    def _flushDown(self):
+        for child in self.children:
+            child._flushDown()
+        self._flush()
+
+    def _flush(self):
+        if self.dirty:
+            self.cntl.putdata(self.key, self.blob)
+            self.dirty = False
 
     @property
     def invalid(self):

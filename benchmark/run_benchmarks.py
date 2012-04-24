@@ -14,7 +14,7 @@ backend = SQLiteBackend(backingFile)
 fs = emptyFs(backend, 'benchmark/data/fs_root.txt')
 
 #cap = backend.capacityUsed
-print '*** Append benchmark ***' 
+print '*** Append benchmark ***'
 depth = 10
 samples = 10
 size = 50
