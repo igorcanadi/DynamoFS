@@ -110,40 +110,38 @@ class Blob(object):
         """
         raise NotImplementedError()
 
+    @validate
     def _update_hash_and_blob(self):
         """
         After this method is called, self._blob will contain the serialized representation
         of this blob's data, and self._key will contain the hash of self._blob.
         """
-        # TODO: optimize -- shouldn't have to regenerate this stuff every time
-        if self._blob == None:
-            self._blob = self._serialize_data()
-        if self._key == None:
-            cp = self._blob
-            self._key = hashlib.sha512(cp).hexdigest()
+        self._blob = self._serialize_data()
+        cp = self._blob
+        self._key = hashlib.sha512(cp).hexdigest()
 
     @property
-    @validate
     def key(self):
         """
         Returns the hash of this blob -- that is, the key under which this blob should
         be stored in the backend. The returned key is guaranteed to be up-to-date according
         to the data currently stored. Does not check for whether this blob is valid.
         """
-        self._update_hash_and_blob()
+        if self._key == None:
+            self._update_hash_and_blob()
         # I have been accessed, don't evict me from cache!
         self.cache_manager.add_to_cache(self.evict)
         return self._key
 
     @property
-    @validate
     def blob(self):
         """
         Returns the serialized data associated with this blob. This is the data that should
         be stored in the backend. The serialized data is based on the current locally stored
         data -- this method does not check for whether the blob is valid.
         """
-        self._update_hash_and_blob()
+        if self._blob == None:
+            self._update_hash_and_blob()
         return self._blob
 
     def getdirty(self):
