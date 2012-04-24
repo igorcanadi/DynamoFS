@@ -1,6 +1,9 @@
 import blob
 import controller
+import cache_manager
 import file
+
+CACHE_SIZE = 10000
 
 # Splits a path into a list of component names.
 def _get_plist(path):
@@ -13,6 +16,7 @@ def _get_leaf_filename(path):
 class DynamoFS:
     def __init__(self, server, root_filename):
         self.cntl = controller.Controller(server, root_filename)
+        self.cache_manager = cache_manager.CacheManager(CACHE_SIZE)
         root_hash = self.cntl.get_root_hash()
         try:
             server.get(root_hash)
@@ -24,7 +28,7 @@ class DynamoFS:
         # if root_hash == None, it means we don't have a root, 
         # so this just generates it
         self.root = blob.DirectoryBlob(root_hash, self.cntl, 
-                None, root_hash == None)
+                self.cache_manager, None, root_hash == None)
 
     def cleanup(self):
         self.root.recursiveFlush()
@@ -44,7 +48,8 @@ class DynamoFS:
         return filename in parent.keys()
 
     def _create_file(self, parent, filename):
-        parent[filename] = blob.BlockListBlob(None, self.cntl, parent, True)
+        parent[filename] = blob.BlockListBlob(None, self.cntl, 
+                self.cache_manager, parent, True)
 
     # mode can be 'r' or 'w'
     def open(self, filename, mode):
@@ -66,7 +71,8 @@ class DynamoFS:
         # TODO: add error checking
         # look up parent
         parent = self._find_leaf(path)
-        parent[new_dir] = blob.DirectoryBlob(None, self.cntl, parent, True)
+        parent[new_dir] = blob.DirectoryBlob(None, self.cntl, 
+                self.cache_manager, parent, True)
 
     def ls(self, path):
         return self._find_leaf(path).keys()
@@ -83,7 +89,8 @@ class DynamoFS:
 
     def attach_shared_key(self, path, filename, key):
         target = self._find_leaf(path)
-        target[filename] = blob.DirectoryBlob(key, self.cntl, target, False)
+        target[filename] = blob.DirectoryBlob(key, self.cntl, 
+                self.cache_manager, target, False)
 
     def _output_whole_tree(self, node, level):
         if isinstance(node, blob.DirectoryBlob):
