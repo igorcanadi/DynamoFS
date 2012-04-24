@@ -116,9 +116,11 @@ class Blob(object):
         of this blob's data, and self._key will contain the hash of self._blob.
         """
         # TODO: optimize -- shouldn't have to regenerate this stuff every time
-        self._blob = self._serialize_data()
-        cp = self._blob
-        self._key = hashlib.sha512(cp).hexdigest()
+        if self._blob == None:
+            self._blob = self._serialize_data()
+        if self._key == None:
+            cp = self._blob
+            self._key = hashlib.sha512(cp).hexdigest()
 
     @property
     @validate
