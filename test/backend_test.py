@@ -40,7 +40,12 @@ class BackendTest(unittest.TestCase):
         self.assertRaises(KeyError, backend.get, "Nikita")
         
         # Test out nuking again, to make sure it still works.
+        # Also test it with a large number of keys.
         backend.put("John", "Doe")
+        for i in range(0, 100):
+            backend.put(str(i), str(i))
         self.assertEqual(backend.get("John"), "Doe")
         backend.nuke()
         self.assertRaises(KeyError, backend.get, "John")
+        for i in range(0, 100):
+            self.assertRaises(KeyError, backend.get, str(i))
