@@ -70,9 +70,8 @@ class Blob(object):
 
     def _flushUp(self):
         """
-        If self.dirty, then put self's data in the store and then call _flushUp
-        on parent. If parent is None, then call update_root on controller with
-        my own key.
+        If self.dirty, then call _flush on self. If parent exists, call _flushUp
+        on parent. If no parent, update root on controller with self's key.
         """
         if self.clean:
             return
@@ -83,11 +82,17 @@ class Blob(object):
             self.cntl.update_root(self.key)
 
     def _flushDown(self):
+        """
+        For each child, call _flushDown on that child. Then, call _flush on self.
+        """
         for child in self.children:
             child._flushDown()
         self._flush()
 
     def _flush(self):
+        """
+        If this blob is dirty, push this blob to store and set this blob to clean.
+        """
         if self.dirty:
             self.cntl.putdata(self.key, self.blob)
             self.dirty = False
