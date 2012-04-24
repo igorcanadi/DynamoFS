@@ -24,12 +24,14 @@ def run(backend, depth, samples, size):
     dfs = dynamo_fs.DynamoFS(backend, rootFilename)
     
     # Set up the test by creating a chain of directories to work in.
-    cwd = '/'
+    cwd = ''
     for i in range(0, depth):
         # Make up a random 5-character name for this directory.
         name = str(random.randint(10000, 99999))
         dfs.mkdir(cwd, name)
         cwd += '/' + name
+        
+    print cwd # TODO remove this
     
     # Perform benchmarking.    
     sampler = timing.BenchmarkTimer()
@@ -50,6 +52,8 @@ def run(backend, depth, samples, size):
         sampler.end()
         
     # Done.
+    print "Mean: " + str(sampler.mean()) # TODO remove this
+    
     return sampler.samples
         
         

@@ -50,6 +50,10 @@ class DynamoDBBackend:
         
     # Makes an API Key object from a key string.
     def apiKey(self, key):
+        if (key is None) or (len(key) == 0):
+            # Empty keys are not permitted by Amazon.
+            raise KeyError
+            
         return Key().withHashKeyElement(AttributeValue().withS(key))
     
     

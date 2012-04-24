@@ -8,9 +8,12 @@ class BenchmarkTimer:
         self.samples = []
         
     def begin(self):
-        self.startTime = time.clock()
+        self.beginTime = time.time()
         
     def end(self):
-        endTime = time.clock()
+        endTime = time.time()
         delta = endTime - self.beginTime
         self.samples.append(delta)
+        
+    def mean(self):
+        return sum(self.samples) / len(self.samples)

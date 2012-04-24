@@ -1,13 +1,19 @@
 # Runs benchmarks on a DictBackend.
 
 from dict_backend import DictBackend
+from sqlite_backend import SQLiteBackend
+from dynamodb_backend import DynamoDBBackend
 import bench_append
+import time
 
-backend = DictBackend('./backend.db')
+backend = DynamoDBBackend()
 
-depth = 0
-samples = 100
+depth = 10
+samples = 10
 size = 100
-results = bench_append.run(backend, depth, samples, size)
 
-print str(results)
+start = time.time()
+results = bench_append.run(backend, depth, samples, size)
+end = time.time()
+
+print 'Total test time: ' + str(end - start) + ' sec'
