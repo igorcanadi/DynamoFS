@@ -144,7 +144,7 @@ class Blob(object):
         """
         if not isinstance(value, bool):
             raise TypeError("dirty variable can be only True or False")
-        if value == True and self.parent != None:
+        if value == True and self.parent != None and self.parent.dirty == False:
             self.parent.dirty = True
         self._dirty = value
 
