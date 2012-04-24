@@ -70,6 +70,10 @@ class DynamoFS:
                 self._create_file(parent, leaf_name)
         return file.File(parent[leaf_name], mode)
 
+    def isdir(self, path):
+        parent = self._find_leaf(path)
+        return isinstance(parent, blob.DirectoryBlob)
+
     def rm(self, filename):
         target = self._find_leaf(filename)
         del target.parent[_get_leaf_filename(filename)]
