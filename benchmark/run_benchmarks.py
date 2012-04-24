@@ -16,4 +16,5 @@ start = time.time()
 results = bench_append.run(backend, depth, samples, size)
 end = time.time()
 
+print 'Mean append time: ' + str(results.mean()) + ' sec'
 print 'Total test time: ' + str(end - start) + ' sec'
