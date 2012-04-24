@@ -44,42 +44,43 @@ class Blob(object):
         self._blob = None
         self.parent = parent
         self.valid = valid
-        self.dirty = True
+        self.dirty = True # TODO: shouldn't this be variable?
         self.cntl = cntl
         self.cache_manager = cache_manager
 
-    @validate
     def evict(self):
         """ 
         This is called by a cache manager to let me know that I need to 
-        evict my data field from main memory
+        evict my data field from main memory. It only does anything if this blob
+        is both dirty and valid.
         """
-        if self.dirty:
-            self.flush()
+        if self.dirty and self.valid:
+            self.commit()
         self._blob = None
 
-    def flush(self):
+    def commit(self):
         """
-        If this Blob is dirty, flush it to the backing store using the controller's
-        putdata method. Also, if this Blob has a parent, call parent.flush(). If
-        this Blob does not have a parent, update the root on the controller.
-        """
-        if self.dirty:
-            self.cntl.putdata(self.key, self.blob)
-            # If i'm root, update root
-            if self.parent == None:
-                self.cntl.update_root(self.key)
-            else:
-                self.parent.flush()
-            self.dirty = False
-
-    def recursiveFlush(self):
-        """
-        Calls recursiveFlush on all children, then calls flush on self.
+        Calls recursiveFlush on all children, then calls _flushUp on self. When commit
+        returns to an external caller, the file system will be in a consistent and
+        up-to-date state.
         """
         for child in self.children:
-            child.recursiveFlush()
-        self.flush()
+            child.commit()
+        self._flushUp()
+
+    def _flushUp(self):
+        """
+        If self.dirty, then put self's data in the store and then call _flushUp
+        on parent. If parent is None, then call update_root on controller with
+        my own key.
+        """
+        if self.clean:
+            return
+        self.cntl.putdata(self.key, self.blob)
+        if self.parent != None:
+            self.parent._flushUp()
+        else:
+            self.cntl.update_root(self.key)
 
     @property
     def invalid(self):

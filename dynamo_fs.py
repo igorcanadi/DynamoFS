@@ -38,7 +38,7 @@ class DynamoFS:
                 self.cache_manager, None, root_hash == None)
 
     def cleanup(self):
-        self.root.recursiveFlush()
+        self.root.commit()
 
     def __del__(self):
         self.cleanup()
@@ -95,7 +95,7 @@ class DynamoFS:
 
     def get_key_for_sharing(self, path):
         target = self._find_leaf(path)
-        target.recursiveFlush()
+        target.commit()
         return target.key
 
     def attach_shared_key(self, path, filename, key):

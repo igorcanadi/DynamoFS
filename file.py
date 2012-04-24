@@ -63,4 +63,4 @@ class File:
             self.seek(file_len + offset, SEEK_SET)
 
     def close(self):
-        self.blob.flush()
+        self.blob.commit()
