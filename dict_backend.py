@@ -12,6 +12,8 @@ class Datum:
 class DictBackend:
     # filename is a local file where this dict will persist itself.
     # delayTime is the artificial delay (in seconds) to insert for each backend operation.
+    #    NOTE: Amazon claims that DynamoDB has "single-digit millisecond" latency. So a good
+    #          number to use here would probably be 0.005.
     def __init__(self, filename, delayTime = 0.0):
         self.filename = filename
         self.delayTime = delayTime
