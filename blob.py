@@ -23,11 +23,11 @@ def validate(fn):
     """
     def wrapped(self, *args, **kwargs):
         if self.invalid:
-            self._deserialize_data(self.cntl.getdata(self._key))
+            self._blob = self.cntl.getdata(self._key)
+            self._deserialize_data(self._blob)
             self.dirty = False
             self.valid = True
             self._key = None
-            self._blob = None
         return fn(self, *args, **kwargs)
     return wrapped
 
