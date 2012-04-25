@@ -31,7 +31,9 @@ class BerkeleyDBBackend:
             self.kvstore.sync()
 
     def get(self, key):
-        self.kvstore.sync() # TODO this is necessary for strong consistency on deletes, but not otherwise.
+        # We don't do kvstore.sync() here. This might help us get stronger consistency
+        # on deletes, but we don't really care about that, and it will cost us
+        # performance to do a sync here.
         (_, _, value) = self.kvstore[key].partition('~')
         return value
 
