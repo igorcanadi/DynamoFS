@@ -6,6 +6,7 @@ from random import randint
 import benchmark_utils
 import dynamo_fs
 from berkeleydb_backend import BerkeleyDBBackend
+from dict_backend import DictBackend
 import os
 import file
 
@@ -83,6 +84,18 @@ def runAllWithBerkeleyDB(depth, fileSize):
     except:
         pass
     backend = BerkeleyDBBackend(backingFile)
+    fs = dynamo_fs.DynamoFS(backend, 'benchmark/data/fs_root.txt')
+    
+    return runAllWithFs(fs, depth, fileSize)
+
+# Runs all four benchmarks on a DictBackend.
+def runAllWithDict(depth, fileSize):
+    backingFile = 'benchmark/data/bench.db'
+    try:
+        os.unlink(backingFile)
+    except:
+        pass
+    backend = DictBackend(backingFile)
     fs = dynamo_fs.DynamoFS(backend, 'benchmark/data/fs_root.txt')
     
     return runAllWithFs(fs, depth, fileSize)
