@@ -5,7 +5,8 @@ import unittest
 
 # Helper class that contains generic code for testing any backend.
 class BackendTest(unittest.TestCase):
-    def runTestWithBackend(self, backend):
+    # Tests for a single backend.
+    def runSingleClient(self, backend):
         backend.nuke()
         
         # Create and garbage-collect one key.
@@ -51,3 +52,21 @@ class BackendTest(unittest.TestCase):
         self.assertRaises(KeyError, backend.get, "John")
         for i in range(0, 100):
             self.assertRaises(KeyError, backend.get, str(i))
+    
+    # Tests for consistency between two instances of a backend.
+    def runMultipleClients(self, backend1, backend2):
+        # Send 1 -> 2
+        backend1.put("message", "Hello, backend2!")
+        self.assertEqual(backend2.get("message"), "Hello, backend2!")
+        
+        # Delete 1 -> 2
+        backend1.decRefCount("message")
+        self.assertRaises(KeyError, backend2.get, "message")
+        
+        # Send 2 -> 1
+        backend2.put("message", "Hello, backend1!")
+        self.assertEqual(backend1.get("message"), "Hello, backend1!")
+        
+        # Delete 2 -> 1
+        backend2.decRefCount("message")
+        self.assertRaises(KeyError, backend1.get, "message")

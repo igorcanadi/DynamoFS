@@ -28,8 +28,10 @@ class BerkeleyDBBackend:
         except KeyError:
             # This key does not exist yet, so create it with a reference count of 1.
             self.kvstore[key] = '1~' + value 
+            self.kvstore.sync()
 
     def get(self, key):
+        self.kvstore.sync() # TODO this is necessary for strong consistency on deletes, but not otherwise.
         (_, _, value) = self.kvstore[key].partition('~')
         return value
 
@@ -42,6 +44,7 @@ class BerkeleyDBBackend:
 
     def incRefCount(self, key):
         self.kvstore[key] = self.addToRefCount(self.kvstore[key], 1)
+        self.kvstore.sync()
         
     def decRefCount(self, key):
         record = self.addToRefCount(self.kvstore[key], -1)
@@ -51,6 +54,8 @@ class BerkeleyDBBackend:
             del self.kvstore[key]
         else: # Save the updated record.
             self.kvstore[key] = record
+            
+        self.kvstore.sync()
             
     def nuke(self):
         self.kvstore.close()

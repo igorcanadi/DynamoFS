@@ -39,3 +39,6 @@ print '### Backend statistics:'
 print ('Mean request latency (std-dev): ' + str(dynamodb_backend.sampler.mean()) +
        ' (' + str(dynamodb_backend.sampler.stddev()) + ')')
 """
+
+del fs
+del backend
