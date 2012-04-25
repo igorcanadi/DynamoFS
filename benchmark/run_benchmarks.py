@@ -2,14 +2,15 @@
 # at the terminal; feel free to edit as you need.
 
 #from dict_backend import DictBackend
-from sqlite_backend import SQLiteBackend
+#from sqlite_backend import SQLiteBackend
+from berkeleydb_backend import BerkeleyDBBackend
 #import dynamodb_backend
 import bench_append
 import bench_mkdir_ls
 from benchmark_utils import *
 
 backingFile = 'benchmarks.db'
-backend = SQLiteBackend(backingFile)
+backend = BerkeleyDBBackend(backingFile)
 
 fs = emptyFs(backend, 'benchmark/data/fs_root.txt')
 

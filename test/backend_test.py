@@ -6,6 +6,8 @@ import unittest
 # Helper class that contains generic code for testing any backend.
 class BackendTest(unittest.TestCase):
     def runTestWithBackend(self, backend):
+        backend.nuke()
+        
         # Create and garbage-collect one key.
         self.assertRaises(KeyError, backend.get, "key1")
         backend.put("key1", "value1")
