@@ -50,15 +50,28 @@ class Blob(object):
         self.cntl = cntl
         self.cache_manager = cache_manager
 
+    def _delete_data(self):
+        """
+        You're being removed from cache, clear your data
+        """
+        raise NotImplementedError()
+
     def evict(self):
         """ 
         This is called by a cache manager to let me know that I need to 
         evict my data field from main memory. It only does anything if this blob
         is both dirty and valid.
         """
-        if self.dirty and self.valid:
-            self.commit()
+        if self.valid:
+            if self.dirty:
+                self.commit()
+            for child in self.children:
+                child.evict()
+        self.dirty = False
+        self.valid = False
+        self._delete_data()
         self._blob = None
+        self.remove_from_cache(self.evict)
 
     def commit(self):
         """
@@ -213,6 +226,9 @@ class DirectoryBlob(Blob):
         if valid:
             self.items = dict()
 
+    def _delete_data(self):
+        del self.items
+
     @validate
     def __getitem__(self, filename):
         """
@@ -286,6 +302,9 @@ class BlockListBlob(Blob):
         if valid:
             self.blocks = list()
 
+    def _delete_data(self):
+        del self.blocks
+
     @validate
     def __getitem__(self, item):
         if len(self.blocks) - 1 < item:
@@ -348,6 +367,9 @@ class BlockBlob(Blob):
         super(BlockBlob, self).__init__(key, cntl, cache_manager, parent, valid)
         if self.valid:
             self.data = array('B')
+
+    def _delete_data(self):
+        del self.data
 
     @validate
     def __getitem__(self, index):
