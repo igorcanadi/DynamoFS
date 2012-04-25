@@ -2,8 +2,7 @@ import blob
 import controller
 import cache_manager
 import file
-
-CACHE_SIZE = 10000 # TODO what are the units for this?
+import config
 
 # Splits a path into a list of component names.
 def _get_plist(path):
@@ -22,8 +21,10 @@ def concatPath(parent, child):
 
 class DynamoFS:
     def __init__(self, server, root_filename):
-        self.cntl = controller.Controller(server, root_filename)
-        self.cache_manager = cache_manager.CacheManager(CACHE_SIZE)
+        self.cntl = controller.Controller(server, root_filename, 
+                config.CONTROLLER_CACHE_SIZE)
+        self.cache_manager = cache_manager.CacheManager(
+                config.CACHE_MANAGER_CACHE_SIZE)
         root_hash = self.cntl.get_root_hash()
         try:
             server.get(root_hash)
