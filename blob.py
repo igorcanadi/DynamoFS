@@ -9,9 +9,10 @@ def dirties(fn):
     as dirty upon entry.
     """
     def wrapped(self, *args, **kwargs):
-        self.dirty = True
-        self._key = None
-        self._blob = None
+        if self.clean:
+            self.dirty = True
+            self._key = None
+            self._blob = None
         return fn(self, *args, **kwargs)
     return wrapped
 
@@ -24,8 +25,9 @@ def validate(fn):
         if self.invalid:
             self._deserialize_data(self.cntl.getdata(self._key))
             self.dirty = False
-        self.valid = True
-        self._blob = None
+            self.valid = True
+            self._key = None
+            self._blob = None
         return fn(self, *args, **kwargs)
     return wrapped
 
@@ -44,7 +46,7 @@ class Blob(object):
         self._blob = None
         self.parent = parent
         self.valid = valid
-        self.dirty = True # TODO: shouldn't this be variable?
+        self.dirty = valid # TODO: shouldn't this be variable?
         self.cntl = cntl
         self.cache_manager = cache_manager
 
@@ -60,34 +62,32 @@ class Blob(object):
 
     def commit(self):
         """
-        Calls recursiveFlush on all children, then calls _flushUp on self. When commit
+        Calls _flush_down on all children, then calls _flush_up on self. When commit
         returns to an external caller, the file system will be in a consistent and
-        up-to-date state.
+        up-to-date state. If this node is clean, commit is a no-op.
         """
-        for child in self.children:
-            child._flushDown()
-        self._flushUp()
+        if self.dirty:
+            self._flush_down()
+        self._flush_up()
 
-    def _flushUp(self):
+    def _flush_up(self):
         """
-        If self.dirty, then call _flush on self. If parent exists, call _flushUp
+        If self.dirty, then call _flush on self. If parent exists, call _flush_up
         on parent. If no parent, update root on controller with self's key.
         """
-        if self.clean:
-            return
-        self._flush()
         if self.parent != None:
-            self.parent._flushUp()
+            self.parent._flush_up()
         else:
             self.cntl.update_root(self.key)
 
-    def _flushDown(self):
+    def _flush_down(self):
         """
-        For each child, call _flushDown on that child. Then, call _flush on self.
+        For each child, call _flush_down on that child. Then, call _flush on self.
         """
-        for child in self.children:
-            child._flushDown()
-        self._flush()
+        if self.dirty:
+            for child in self.children:
+                child._flush_down()
+            self._flush()
 
     def _flush(self):
         """
