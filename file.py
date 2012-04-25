@@ -13,11 +13,11 @@ class File:
         self.mode = mode
         self._offset = [0, 0]
 
-    def _advance_offset(self):
-        self._offset[1] += 1
-        if self._offset[1] == PAGE_SIZE:
+    def _advance_offset(self, size = 1):
+        self._offset[1] += size 
+        if self._offset[1] >= PAGE_SIZE:
             self._offset[0] += 1
-            self._offset[1] = 0
+            self._offset[1] -= PAGE_SIZE
 
     def _offset_at_the_end(self):
         if len(self.blob.children) <= self._offset[0]:
@@ -29,10 +29,13 @@ class File:
     def write(self, data):
         if self.mode != 'w':
             raise Exception('Not writable, sorry')
-
-        for d in data:
-            self.blob[self._offset[0]][self._offset[1]] = ord(d)
-            self._advance_offset()
+        data_index = 0
+        while data_index < len(data):
+            free_space_in_page = PAGE_SIZE - self._offset[1]
+            self.blob[self._offset[0]].write(self._offset[1],
+                    map(ord, data[data_index:(data_index + free_space_in_page)]))
+            self._advance_offset(min(free_space_in_page, len(data) - data_index))
+            data_index += free_space_in_page
 
     def read(self, max_len):
         if self.mode != 'r':

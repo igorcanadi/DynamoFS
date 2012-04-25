@@ -385,8 +385,8 @@ class BlockBlob(Blob):
         Batch write operation. Writes value to data starting at index. Overwrites
         existing data.
         """
-        if len(self.data) - 1 < index:
-            self.data.extend([0 for i in range(index - len(self.data) + 1)])
+        if len(self.data) < index + len(value):
+            self.data.extend([0 for i in range(index + len(value) - len(self.data))])
         for valueIndex in range(len(value)):
             self.data[valueIndex] = value[valueIndex]
 
