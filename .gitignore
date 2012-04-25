@@ -1,4 +1,5 @@
 *.pyc
+jython2.5.2/cachedir
 test/data/test.dat
 AwsCredentials.properties
 fs_root.txt
@@ -6,3 +7,4 @@ server_stub_backup.dat
 sqlite.db
 test/data/fs_root.txt
 test/data/server_stub_backup.dat
+*.class
