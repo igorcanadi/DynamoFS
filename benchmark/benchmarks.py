@@ -7,6 +7,7 @@ import benchmark_utils
 import dynamo_fs
 from berkeleydb_backend import BerkeleyDBBackend
 import os
+import file
 
 # General Note: fileSizes will be rounded up to the nearest multiple of
 # chunk size, for all benchmarks.
@@ -81,7 +82,7 @@ def runAllWithBerkeleyDB(depth, fileSize):
         os.unlink(backingFile)
     except:
         pass
-    backend = BerkeleyDBBackend()
+    backend = BerkeleyDBBackend(backingFile)
     fs = dynamo_fs.DynamoFS(backend, 'benchmark/data/fs_root.txt')
     
     return runAllWithFs(fs, depth, fileSize)
