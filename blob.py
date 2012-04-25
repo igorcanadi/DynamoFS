@@ -375,7 +375,6 @@ class BlockBlob(Blob):
     def __setitem__(self, index, value):
         if len(self.data) - 1 < index:
             # block list is too short; expand
-            # TODO: test against PAGE_SIZE
             self.data.extend([0 for i in range(index - len(self.data) + 1)])
         self.data[index] = value
 
