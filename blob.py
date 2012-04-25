@@ -46,7 +46,7 @@ class Blob(object):
         self._blob = None
         self.parent = parent
         self.valid = valid
-        self.dirty = valid # TODO: shouldn't this be variable?
+        self.dirty = valid
         self.cntl = cntl
         self.cache_manager = cache_manager
 
