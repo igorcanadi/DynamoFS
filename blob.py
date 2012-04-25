@@ -389,6 +389,10 @@ class BlockBlob(Blob):
     @validate
     @dirties
     def write(self, index, value):
+        """
+        Batch write operation. Writes value to data starting at index. Overwrites
+        existing data.
+        """
         if len(self.data) - 1 < index:
             self.data.extend([0 for i in range(index - len(self.data) + 1)])
         for valueIndex in range(len(value)):
