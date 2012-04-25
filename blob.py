@@ -184,8 +184,7 @@ class Blob(object):
         """
         Setter for dirty property -- tells you whether the blob has uncommitted changes.
         """
-        if not isinstance(value, bool):
-            raise TypeError("dirty variable can be only True or False")
+        
         if value == True and self.parent != None and self.parent.dirty == False:
             self.parent.dirty = True
         self._dirty = value
@@ -234,8 +233,7 @@ class DirectoryBlob(Blob):
         """
         Returns the blob associated with key
         """
-        if not isinstance(filename, str):
-            raise TypeError("item was of type %s, expected %s" % (type(filename), str))
+ 
         if filename not in self.items:
             raise IOError()
         return self.items[filename]
@@ -246,10 +244,7 @@ class DirectoryBlob(Blob):
         """
         Sets directory or filename key to point to blob value
         """
-        if not isinstance(filename, str):
-            raise TypeError("key was of type %s, expected %s" % (type(filename), str))
-        if not isinstance(blob, DirectoryBlob) and not isinstance(blob, BlockListBlob):
-            raise TypeError("key was of type %s, expected %s or %s" % (type(filename), DirectoryBlob, BlockListBlob))
+        
         self.items[filename] = blob
 
     @validate
@@ -319,8 +314,6 @@ class BlockListBlob(Blob):
     @validate
     @dirties
     def __setitem__(self, key, value):
-        if not isinstance(value, BlockBlob):
-            raise TypeError()
         self.blocks[key] = value
 
     @validate

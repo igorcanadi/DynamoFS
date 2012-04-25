@@ -22,7 +22,7 @@ class Multiple(BackendTest):
         del self.backend2
     
     def runTest(self):
-        self.runMultipleClients(self.backend1, self.backend2)
+        self.runMultipleClients(self.backend1, self.backend2, False)
         
 # Run the tests.
 if __name__ == '__main__':

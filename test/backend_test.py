@@ -54,19 +54,32 @@ class BackendTest(unittest.TestCase):
             self.assertRaises(KeyError, backend.get, str(i))
     
     # Tests for consistency between two instances of a backend.
-    def runMultipleClients(self, backend1, backend2):
-        # Send 1 -> 2
-        backend1.put("message", "Hello, backend2!")
-        self.assertEqual(backend2.get("message"), "Hello, backend2!")
+    # testDeletes - set to false if you don't want to require deletes to be
+    #               eagerly propagated.
+    def runMultipleClients(self, a, b, testDeletes):
+        self.createMessage(a, b, 1)
+        if testDeletes:
+            self.deleteMessage(a, b)
         
-        # Delete 1 -> 2
-        backend1.decRefCount("message")
-        self.assertRaises(KeyError, backend2.get, "message")
+        self.createMessage(b, a, 2)
+        if testDeletes:
+            self.deleteMessage(b, a)
         
-        # Send 2 -> 1
-        backend2.put("message", "Hello, backend1!")
-        self.assertEqual(backend1.get("message"), "Hello, backend1!")
+        self.createMessage(a, b, 3)
+        if testDeletes:
+            self.deleteMessage(b, a)
         
-        # Delete 2 -> 1
-        backend2.decRefCount("message")
-        self.assertRaises(KeyError, backend1.get, "message")
+        self.createMessage(b, a, 4)
+        if testDeletes:
+            self.deleteMessage(a, b)
+        
+    # Sends a key from one backend to another.
+    def createMessage(self, b1, b2, i):
+        b1.put("message", str(i))
+        self.assertEqual(b2.get("message"), str(i))
+        
+    # Deletes a key from one backend to another.
+    def deleteMessage(self, b1, b2):
+        b1.decRefCount("message")
+        self.assertRaises(KeyError, b2.get, "message")
+        
