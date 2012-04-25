@@ -12,17 +12,9 @@ class Single(BackendTest):
     def runTest(self):
         self.runSingleClient(self.backend)
         
-class Multiple(BackendTest):
-    def setUp(self):
-        self.backend1 = BerkeleyDBBackend('test/data/test.dat')
-        self.backend2 = BerkeleyDBBackend('test/data/test.dat')
-        
-    def tearDown(self):
-        del self.backend1
-        del self.backend2
-    
-    def runTest(self):
-        self.runMultipleClients(self.backend1, self.backend2, True)
+# We don't test BerkeleyDBBackend with multiple clients. We could probably get it
+# to handle multiple clients, but we would need to use the more complicated PyBSDDB
+# API.
         
 # Run the tests.
 if __name__ == '__main__':
