@@ -1,10 +1,8 @@
 import time
-
-DEFAULT_SIZE = 50000
-ELASTIC_CACHE_BUFFER = 300
+import config
 
 class Controller:
-    def __init__(self, server, root_filename, cache_size = DEFAULT_SIZE):
+    def __init__(self, server, root_filename, cache_size):
         self.server = server
         self.root_filename = root_filename
         self.cache = dict()
@@ -15,7 +13,7 @@ class Controller:
             self.root_hash = None
 
     def _relax_cache(self):
-        if len(self.cache) >= self.cache_size + ELASTIC_CACHE_BUFFER:
+        if len(self.cache) >= self.cache_size * config.ELASTIC_CACHE_OVERHEAD:
             entries_to_evict = len(self.cache) - self.cache_size 
             last_access_times = [(self.cache[x][0], x) for x in self.cache]
             last_access_times = sorted(last_access_times)[:entries_to_evict]

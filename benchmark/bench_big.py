@@ -1,5 +1,6 @@
 # Benchmark for appending to files.
 
+from berkeleydb_backend import *
 from benchmark_utils import *
 from file import SEEK_END
 
@@ -22,6 +23,6 @@ def run(fs, size):
 if __name__ == '__main__':
     backend = BerkeleyDBBackend('berkeley_db.db')
     fs = emptyFs(backend, 'benchmark/data/fs_root.txt')
-    s = run(fs, 50000)
+    s = run(fs, 5000000)
     print s.mean()
 
