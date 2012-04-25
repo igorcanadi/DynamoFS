@@ -1,4 +1,5 @@
 *.pyc
+test/data/test.dat
 AwsCredentials.properties
 fs_root.txt
 server_stub_backup.dat
