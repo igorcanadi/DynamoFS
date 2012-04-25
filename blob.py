@@ -388,6 +388,14 @@ class BlockBlob(Blob):
 
     @validate
     @dirties
+    def write(self, index, value):
+        if len(self.data) - 1 < index:
+            self.data.extend([0 for i in range(index - len(self.data) + 1)])
+        for valueIndex in range(len(value)):
+            self.data[valueIndex] = value[valueIndex]
+
+    @validate
+    @dirties
     def append(self, value):
         """
         Appends value to this block's data. Value must be an integer.
