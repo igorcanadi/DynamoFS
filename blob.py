@@ -392,6 +392,15 @@ class BlockBlob(Blob):
             self.data[valueIndex] = value[valueIndex]
 
     @validate
+    def read(self, index, size):
+        """
+        Returns sub array [index, index+size)
+        """
+        if len(self.data) - 1 < index + size - 1:
+            raise IndexError("index out of range")
+        return self.data[index:index + size]
+
+    @validate
     @dirties
     def append(self, value):
         """
