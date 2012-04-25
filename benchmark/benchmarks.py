@@ -12,7 +12,7 @@ import file
 
 # General Note: fileSizes will be rounded up to the nearest multiple of
 # chunk size, for all benchmarks.
-CHUNK_SIZE = 100
+CHUNK_SIZE = 4096
 
 # rand - True for random writes, false for sequential writes.
 def write(fs, filename, fileSize, sampler, rand):
