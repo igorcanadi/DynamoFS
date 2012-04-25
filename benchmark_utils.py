@@ -65,3 +65,8 @@ def randomAlphaString(length):
 # Creates a normally-sized random directory name.
 def randomDirName():
     return randomAlphaString(5)
+
+# Generates a random string of printable ASCII. All the characters will
+# be the same randomly chosen character.
+def semirandomString(length, rangeMin = 32, rangeMax = 126):
+    return chr(random.randint(rangeMin, rangeMax)) * length

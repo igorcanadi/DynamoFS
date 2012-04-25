@@ -1,6 +1,5 @@
 import time
-
-ELASTIC_CACHE_BUFFER = 1000
+import config
 
 class CacheManager:
     def __init__(self, cache_size):
@@ -8,7 +7,7 @@ class CacheManager:
         self.cache = {}
 
     def _relax_cache(self):
-        if len(self.cache) >= self.cache_size + ELASTIC_CACHE_BUFFER:
+        if len(self.cache) >= self.cache_size * config.ELASTIC_CACHE_OVERHEAD:
             entries_to_evict = len(self.cache) - self.cache_size 
             last_access_times = [(self.cache[x], x) for x in self.cache]
             last_access_times = sorted(last_access_times)[:entries_to_evict]

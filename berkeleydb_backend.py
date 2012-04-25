@@ -31,9 +31,7 @@ class BerkeleyDBBackend:
             self.kvstore.sync()
 
     def get(self, key):
-        # We don't do kvstore.sync() here. This might help us get stronger consistency
-        # on deletes, but we don't really care about that, and it will cost us
-        # performance to do a sync here.
+        self.kvstore.sync()
         (_, _, value) = self.kvstore[key].partition('~')
         return value
 
@@ -45,10 +43,12 @@ class BerkeleyDBBackend:
         return str(delta + int(refCountStr)) + '~' + value
 
     def incRefCount(self, key):
+        self.kvstore.sync()
         self.kvstore[key] = self.addToRefCount(self.kvstore[key], 1)
         self.kvstore.sync()
         
     def decRefCount(self, key):
+        self.kvstore.sync()
         record = self.addToRefCount(self.kvstore[key], -1)
         
         if record.startswith('0~'):

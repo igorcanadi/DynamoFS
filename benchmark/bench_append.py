@@ -13,18 +13,17 @@ def run(fs, depth, samples, size):
     cwd = makeDepth(fs, '/', depth)
     filename = dynamo_fs.concatPath(cwd, 'file')
     
-    # Perform benchmarking.    
+    # Perform benchmarking. 
     sampler = BenchmarkTimer()
+    sampler.begin()
+    f = fs.open(filename, 'w')
+    
     for _ in range(0, samples):
         # Generate a random (printable) string to write.
         text = randomString(size)
-    
-        # For each sample, open the file, seek to the end, and write some bytes.
-        sampler.begin()
-        f = fs.open(filename, 'w')
-        f.seek(0, SEEK_END)
         f.write(text)
-        f.close()
-        sampler.end()
+        
+    f.close()
+    sampler.end()
     
     return sampler
