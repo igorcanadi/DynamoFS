@@ -42,3 +42,8 @@ class CacheManager:
         if blob in self.cache:
             del self.cache[blob]
 
+    def flush(self):
+        # Evict all blobs from the cache.
+        for blob in self.cache.keys():
+            blob.evict()
+            

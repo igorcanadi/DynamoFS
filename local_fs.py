@@ -40,6 +40,9 @@ class LocalFS:
         old_name = self._fromRoot(old_name)
         new_name = self._fromRoot(new_name)
         os.rename(old_name, new_name)
+        
+    def flush(self):
+        pass # No-op.
     
 # Object returned by LocalFS.open().
 class LocalFile:

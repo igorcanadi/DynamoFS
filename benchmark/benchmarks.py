@@ -33,11 +33,18 @@ def write(fs, filename, fileSize, sampler, rand):
         bytesLeft -= CHUNK_SIZE
         
     f.close()
+    
+    # Flush the filesystem caches before finishing the timer.
+    fs.flush()
+    
     sampler.end()
     return sampler
 
 # rand - True for random reads, false for sequential reads.
 def read(fs, filename, fileSize, sampler, rand):
+    # Make sure to start with an empty filesystem cache.
+    fs.flush()
+    
     sampler.begin()
     f = fs.open(filename, 'r')
     
@@ -60,6 +67,7 @@ def read(fs, filename, fileSize, sampler, rand):
 # Returns a dict containing the time readings from all four benchmarks.
 def runAllWithFile(fs, filename, fileSize):
     sampler = benchmark_utils.BenchmarkTimer()
+    
     write(fs, filename, fileSize, sampler, False)
     write(fs, filename, fileSize, sampler, True)
     read(fs, filename, fileSize, sampler, False)

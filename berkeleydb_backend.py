@@ -59,3 +59,6 @@ class BerkeleyDBBackend:
         except:
             pass
         self.kvstore = bsddb.hashopen(self.filename)
+        
+    def flush(self):
+        self.kvstore.sync()

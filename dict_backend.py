@@ -64,3 +64,7 @@ class DictBackend:
             pass # The file must have never existed; that's fine.
         
         self.kvstore = dict()
+
+    def flush(self):
+        pass # No-op.
+    

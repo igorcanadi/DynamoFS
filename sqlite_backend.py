@@ -99,3 +99,6 @@ class SQLiteBackend:
             pass # The file must have never existed; that's fine.
         
         self.initSession()
+        
+    def flush(self):
+        pass # No-op.

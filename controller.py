@@ -38,6 +38,9 @@ class Controller:
 
     def putdata(self, hash, value):
         self._add_to_cache(hash, value)
+        
+        # Write-through caching means we also have to put the value into
+        # the backend.
         self.server.put(hash, value)
 
     # return None if root hash not present
@@ -46,3 +49,9 @@ class Controller:
 
     def update_root(self, new_root_hash):
         open(self.root_filename, 'w').write(new_root_hash)
+
+    def flush(self):
+        # Reset the cache to empty. This is easy, since we employ a
+        # write-through cache strategy.
+        self.cache = dict()
+        

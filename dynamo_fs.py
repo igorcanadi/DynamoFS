@@ -125,5 +125,9 @@ class DynamoFS:
         self._output_whole_tree(self.root, 0)
         print "---------------------------- END -----------------"
 
-
-
+    def flush(self):
+        # Flush the caches, starting at the top and working down to the
+        # lowest level.
+        self.cache_manager.flush()
+        self.cntl.flush()
+        self.cntl.server.flush()

@@ -226,3 +226,5 @@ class DynamoDBBackend:
                     result = self.client.batchWriteItem(request).getResponses().get(TABLE_NAME)
                     self.useCapacity(result)
                     
+    def flush(self):
+        pass # No-op.
