@@ -88,8 +88,6 @@ class Blob(object):
         If self.dirty, then call _flush on self. If parent exists, call _flush_up
         on parent. If no parent, update root on controller with self's key.
         """
-        #if self.dirty:
-            #self._flush()
         if self.parent != None:
             self.parent._flush_up()
         else:
