@@ -26,6 +26,7 @@ class File:
             return True
         return False
 
+    # TODO maybe change the parameters to array instead of string?
     def write(self, data):
         if self.mode != 'w':
             raise Exception('Not writable, sorry')
@@ -41,11 +42,15 @@ class File:
         if self.mode != 'r':
             raise Exception('Not readable, sorry')
         ret = ""
-        for i in range(max_len):
+        while len(ret) < max_len:
             if self._offset_at_the_end():
                 break
-            ret += chr(self.blob[self._offset[0]][self._offset[1]])
-            self._advance_offset()
+            reading_bytes = self.blob[self._offset[0]].size() - \
+                self._offset[1]
+            reading_bytes = min(reading_bytes, max_len - len(ret))
+            ret += "".join(map(chr, 
+                    self.blob[self._offset[0]].read(self._offset[1], reading_bytes)))
+            self._advance_offset(reading_bytes)
         return ret
 
     # The lseek() function allows the file offset to be set beyond the end of
