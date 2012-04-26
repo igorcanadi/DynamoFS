@@ -16,14 +16,15 @@ class CacheManager:
                     break
                 if lat[1] in self.cache:
                     # call the evict function
-                    lat[1]()
+                    lat[1].evict()
 
-    def add_to_cache(self, evict_function):
-        if evict_function not in self.cache:
+    def add_to_cache(self, blob):
+        print blob._key
+        if blob not in self.cache:
             self._relax_cache()
-        self.cache[evict_function] = time.time()
+        self.cache[blob] = time.time()
 
-    def remove_from_cache(self, evict_function):
-        if evict_function in self.cache:
-            del self.cache[evict_function]
+    def remove_from_cache(self, blob):
+        if blob in self.cache:
+            del self.cache[blob]
 

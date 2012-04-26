@@ -160,7 +160,7 @@ class Blob(object):
         if self._key == None:
             self._update_hash_and_blob()
         # I have been accessed, don't evict me from cache!
-        self.cache_manager.add_to_cache(self.evict)
+        self.cache_manager.add_to_cache(self)
         return self._key
 
     @property
@@ -200,6 +200,9 @@ class Blob(object):
         should return an empty list.
         """
         raise NotImplementedError()
+
+    def __hash__(self):
+        return id(self)
 
 class DirectoryBlob(Blob):
     """
