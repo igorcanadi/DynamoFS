@@ -13,6 +13,13 @@ import shutil
 # chunk size, for all benchmarks.
 CHUNK_SIZE = 4096
 
+# Generates a random position to seek to in a file.
+def randPos(fileSize):
+    if fileSize <= CHUNK_SIZE:
+        return 0
+    else:
+        return randint(0, fileSize - 1 - CHUNK_SIZE)
+
 # rand - True for random writes, false for sequential writes.
 def write(fs, filename, fileSize, sampler, rand):
     sampler.begin()
@@ -21,8 +28,7 @@ def write(fs, filename, fileSize, sampler, rand):
     bytesLeft = fileSize
     while bytesLeft > 0:
         if rand: # Seek to a random place.
-            pos = randint(0, fileSize - 1 - CHUNK_SIZE)
-            f.seek(pos, file.SEEK_SET)
+            f.seek(randPos(fileSize), file.SEEK_SET)
         f.write(benchmark_utils.semirandomString(CHUNK_SIZE))
         bytesLeft -= CHUNK_SIZE
         
@@ -38,8 +44,7 @@ def read(fs, filename, fileSize, sampler, rand):
     bytesLeft = fileSize
     while bytesLeft > 0:
         if rand: # Seek to a random place.
-            pos = randint(0, fileSize - 1 - CHUNK_SIZE)
-            f.seek(pos, file.SEEK_SET)
+            f.seek(randPos(fileSize), file.SEEK_SET)
         f.read(CHUNK_SIZE)
         bytesLeft -= CHUNK_SIZE
         
@@ -74,7 +79,8 @@ def runAllWithFs(fs, depth, fileSize):
     cwd = benchmark_utils.makeDepth(fs, '/', depth)
     filename = dynamo_fs.concatPath(cwd, 'the_file')
     return runAllWithFile(fs, filename, fileSize)
-    
+
+# Ensures that a given file does not exist.
 def ensureDelete(filename):
     try:
         os.unlink(filename)
