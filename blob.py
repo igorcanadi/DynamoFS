@@ -76,8 +76,8 @@ class Blob(object):
         is both dirty and valid.
         """
         self._assert_valid_state()
-        self.commit()
         if self.valid:
+            self.commit()
             for child in self.children:
                 child.evict()
         self.dirty = False
