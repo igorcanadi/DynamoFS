@@ -13,7 +13,7 @@ class Controller:
             self.root_hash = None
 
     def _relax_cache(self):
-        if len(self.cache) >= self.cache_size * config.ELASTIC_CACHE_OVERHEAD:
+        if len(self.cache) >= float(self.cache_size) * config.ELASTIC_CACHE_OVERHEAD:
             entries_to_evict = len(self.cache) - self.cache_size 
             last_access_times = [(self.cache[x][0], x) for x in self.cache]
             last_access_times = sorted(last_access_times)[:entries_to_evict]

@@ -5,4 +5,4 @@ CONTROLLER_CACHE_SIZE = 50000
 CACHE_MANAGER_CACHE_SIZE = 10000
 
 # only when cache becames this big start cleaning it up
-ELASTIC_CACHE_OVERHEAD = 1.1
+ELASTIC_CACHE_OVERHEAD = 1.3
