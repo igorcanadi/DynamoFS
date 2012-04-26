@@ -9,6 +9,7 @@ def dirties(fn):
     as dirty upon entry.
     """
     def wrapped(self, *args, **kwargs):
+        self._assert_valid_state()
         if self.clean:
             self.dirty = True
             self._key = None
@@ -22,6 +23,7 @@ def validate(fn):
     fetching data if needed, and marking the blob as valid.
     """
     def wrapped(self, *args, **kwargs):
+        self._assert_valid_state()
         if self.invalid:
             self._blob = self.cntl.getdata(self._key)
             self._deserialize_data(self._blob)
@@ -50,6 +52,12 @@ class Blob(object):
         self.cntl = cntl
         self.cache_manager = cache_manager
 
+    def _assert_valid_state(self):
+        assert(self._key != None or self.valid == True)
+        # TODO: is this valid assert?
+        #assert(self._key != None or self.dirty == True)
+        assert(self.valid == True or self.dirty == False)
+
     def _delete_data(self):
         """
         You're being removed from cache, clear your data
@@ -63,7 +71,7 @@ class Blob(object):
         is both dirty and valid.
         """
         if self.valid:
-            if self.dirty:
+            if self.dirty or self._key == None:
                 self.commit()
             for child in self.children:
                 child.evict()
@@ -71,7 +79,8 @@ class Blob(object):
         self.valid = False
         self._delete_data()
         self._blob = None
-        self.remove_from_cache(self.evict)
+        self.cache_manager.remove_from_cache(self)
+        self._assert_valid_state()
 
     def commit(self):
         """
@@ -79,7 +88,7 @@ class Blob(object):
         returns to an external caller, the file system will be in a consistent and
         up-to-date state. If this node is clean, commit is a no-op.
         """
-        if self.dirty:
+        if self.dirty or self._key == None:
             self._flush_down()
         self._flush_up()
 
@@ -97,7 +106,7 @@ class Blob(object):
         """
         For each child, call _flush_down on that child. Then, call _flush on self.
         """
-        if self.dirty:
+        if self.dirty or self._key == None:
             for child in self.children:
                 child._flush_down()
             self._flush()
@@ -106,7 +115,7 @@ class Blob(object):
         """
         If this blob is dirty, push this blob to store and set this blob to clean.
         """
-        if self.dirty:
+        if self.dirty or self._key == None:
             self.cntl.putdata(self.key, self.blob)
             self.dirty = False
 
@@ -160,7 +169,7 @@ class Blob(object):
         if self._key == None:
             self._update_hash_and_blob()
         # I have been accessed, don't evict me from cache!
-        self.cache_manager.add_to_cache(self.evict)
+        self.cache_manager.add_to_cache(self)
         return self._key
 
     @property
@@ -201,6 +210,9 @@ class Blob(object):
         """
         raise NotImplementedError()
 
+    def __hash__(self):
+        return id(self)
+
 class DirectoryBlob(Blob):
     """
     Represents a directory. Can be used like a dict. Example usage:
@@ -226,7 +238,7 @@ class DirectoryBlob(Blob):
             self.items = dict()
 
     def _delete_data(self):
-        del self.items
+        self.items = dict()
 
     @validate
     def __getitem__(self, filename):
@@ -298,7 +310,7 @@ class BlockListBlob(Blob):
             self.blocks = list()
 
     def _delete_data(self):
-        del self.blocks
+        self.blocks = list()
 
     @validate
     def __getitem__(self, item):
@@ -362,7 +374,7 @@ class BlockBlob(Blob):
             self.data = array('B')
 
     def _delete_data(self):
-        del self.data
+        self.data = array('B')
 
     @validate
     def __getitem__(self, index):
@@ -387,8 +399,7 @@ class BlockBlob(Blob):
         """
         if len(self.data) < index + len(value):
             self.data.extend([0 for i in range(index + len(value) - len(self.data))])
-        for valueIndex in range(len(value)):
-            self.data[valueIndex] = value[valueIndex]
+        self.data[index:(index + len(value))] = array("B", value)
 
     @validate
     def read(self, index, size):

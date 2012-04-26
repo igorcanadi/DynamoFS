@@ -10,13 +10,19 @@ def run(fs, size):
     # Perform benchmarking. 
     sampler = BenchmarkTimer()
     sampler.begin()
+    # write
     f = fs.open('big_file', 'w')
-
-    chunck_size = 10000
+    chunck_size = 100000
     for i in range(size/chunck_size):
         f.write('a' * chunck_size)
-    
     f.close()
+
+    # read
+    f = fs.open('big_file', 'r')
+    for i in range(size/chunck_size):
+        a = f.read(chunck_size)
+    f.close()
+
     sampler.end()
     
     return sampler
@@ -26,6 +32,6 @@ if __name__ == '__main__':
     backend = DictBackend('dict_backend.db')
 
     fs = emptyFs(backend, 'benchmark/data/fs_root.txt')
-    s = run(fs, 5000000)
+    s = run(fs, 50000000)
     print s.mean()
 

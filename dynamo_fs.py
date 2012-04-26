@@ -8,16 +8,17 @@ import config
 def _get_plist(path):
     return filter(len, path.split('/'))
 
+def _get_file_and_path(path):
+    plist = _get_plist(path)
+    return ("/".join(plist[:-1]), plist[-1])
+
 # Gets the leaf name for a path.
 def _get_leaf_filename(path):
     return _get_plist(path)[-1]
 
 # Appends a child name to an existing parent path.
 def concatPath(parent, child):
-    if parent.endswith('/'):
-        return parent + child
-    else:
-        return parent + '/' + child
+    return parent.rstrip('/') + '/' + child.lstrip('/')
 
 class DynamoFS:
     def __init__(self, server, root_filename):
@@ -89,10 +90,15 @@ class DynamoFS:
     def ls(self, path):
         return self._find_leaf(path).keys()
 
-    def mv(self, path, old_name, new_name):
-        target = self._find_leaf(path + '/' + old_name)
-        target.parent[new_name] = target.parent[old_name]
-        del target.parent[old_name]
+    def mv(self, old_name, new_name):
+        (old_path, old_file) = _get_file_and_path(old_name)
+        (new_path, new_file) = _get_file_and_path(new_name)
+        source = self._find_leaf(old_name)
+        target_parent = self._find_leaf(new_path)
+        if new_name in target_parent.keys():
+            raise Exception('Already exists')
+        target_parent[new_file] = source.parent[old_file]
+        del source.parent[old_file]
 
     def get_key_for_sharing(self, path):
         target = self._find_leaf(path)
@@ -107,10 +113,11 @@ class DynamoFS:
     def _output_whole_tree(self, node, level):
         if isinstance(node, blob.DirectoryBlob):
             for filename in node.keys():
-                print "\t" * level + filename
+                print "\t" * level + filename + " (" + node[filename].key[0:5] + ")"
                 self._output_whole_tree(node[filename], level + 1)
         elif isinstance(node, blob.BlockListBlob):
-            print "\t" * level + "".join([block.data_as_string() for block in node.children])
+            print "\t" * level + "".join([block.data_as_string() for block in node.children]) + \
+                    " (" + node.key[0:5] + ")"
 
     def debug_output_whole_tree(self):
         print "---------------------------- WHOLE TREE -----------------"

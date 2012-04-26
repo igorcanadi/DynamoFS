@@ -5,14 +5,20 @@ Code to perform official benchmarks for the paper's evaluation section.
 from random import randint
 import benchmark_utils
 import dynamo_fs
-from berkeleydb_backend import BerkeleyDBBackend
-from dict_backend import DictBackend
 import os
 import file
+import shutil
 
 # General Note: fileSizes will be rounded up to the nearest multiple of
 # chunk size, for all benchmarks.
-CHUNK_SIZE = 100
+CHUNK_SIZE = 4096
+
+# Generates a random position to seek to in a file.
+def randPos(fileSize):
+    if fileSize <= CHUNK_SIZE:
+        return 0
+    else:
+        return randint(0, fileSize - 1 - CHUNK_SIZE)
 
 # rand - True for random writes, false for sequential writes.
 def write(fs, filename, fileSize, sampler, rand):
@@ -22,9 +28,8 @@ def write(fs, filename, fileSize, sampler, rand):
     bytesLeft = fileSize
     while bytesLeft > 0:
         if rand: # Seek to a random place.
-            pos = randint(0, fileSize - 1 - CHUNK_SIZE)
-            f.seek(pos, file.SEEK_SET)
-        f.write(benchmark_utils.semirandomString(CHUNK_SIZE))
+            f.seek(randPos(fileSize), file.SEEK_SET)
+        f.write_array(benchmark_utils.semirandomArray(CHUNK_SIZE))
         bytesLeft -= CHUNK_SIZE
         
     f.close()
@@ -39,9 +44,8 @@ def read(fs, filename, fileSize, sampler, rand):
     bytesLeft = fileSize
     while bytesLeft > 0:
         if rand: # Seek to a random place.
-            pos = randint(0, fileSize - 1 - CHUNK_SIZE)
-            f.seek(pos, file.SEEK_SET)
-        f.read(CHUNK_SIZE)
+            f.seek(randPos(fileSize), file.SEEK_SET)
+        f.read_array(CHUNK_SIZE)
         bytesLeft -= CHUNK_SIZE
         
     f.close()
@@ -75,27 +79,63 @@ def runAllWithFs(fs, depth, fileSize):
     cwd = benchmark_utils.makeDepth(fs, '/', depth)
     filename = dynamo_fs.concatPath(cwd, 'the_file')
     return runAllWithFile(fs, filename, fileSize)
+
+# Ensures that a given file does not exist.
+def ensureDelete(filename):
+    try:
+        os.unlink(filename)
+    except:
+        pass
     
 # Runs all four benchmarks on BerkeleyDB.
 def runAllWithBerkeleyDB(depth, fileSize):
+    from berkeleydb_backend import BerkeleyDBBackend
+    
     backingFile = 'benchmark/data/bench.db'
-    try:
-        os.unlink(backingFile)
-    except:
-        pass
+    fsRootFile =  'benchmark/data/fs_root.txt'
+    ensureDelete(backingFile)
+    ensureDelete(fsRootFile)
+
     backend = BerkeleyDBBackend(backingFile)
-    fs = dynamo_fs.DynamoFS(backend, 'benchmark/data/fs_root.txt')
+    fs = dynamo_fs.DynamoFS(backend, fsRootFile)
     
     return runAllWithFs(fs, depth, fileSize)
 
 # Runs all four benchmarks on a DictBackend.
 def runAllWithDict(depth, fileSize):
+    from dict_backend import DictBackend
+    
     backingFile = 'benchmark/data/bench.db'
+    fsRootFile =  'benchmark/data/fs_root.txt'
+    ensureDelete(backingFile)
+    ensureDelete(fsRootFile)
+    
+    backend = DictBackend(backingFile)
+    fs = dynamo_fs.DynamoFS(backend, fsRootFile)
+    
+    return runAllWithFs(fs, depth, fileSize)
+
+# Runs all four benchmarks on BerkeleyDB.
+def runAllWithDynamoDB(depth, fileSize):
+    from dynamodb_backend import DynamoDBBackend
+    
+    fsRootFile =  'benchmark/data/fs_root.txt'
+    ensureDelete(fsRootFile)
+    
+    backend = DynamoDBBackend()
+    fs = dynamo_fs.DynamoFS(backend, fsRootFile)
+    
+    return runAllWithFs(fs, depth, fileSize)
+
+# Runs all four benchmarks on a LocalFS.
+def runAllWithLocalFS(depth, fileSize):
+    from local_fs import LocalFS
+    
+    root = 'benchmark/data/localfs'
     try:
-        os.unlink(backingFile)
+        shutil.rmtree(root) # Nuke the local fs.
     except:
         pass
-    backend = DictBackend(backingFile)
-    fs = dynamo_fs.DynamoFS(backend, 'benchmark/data/fs_root.txt')
+    fs = LocalFS(root)
     
     return runAllWithFs(fs, depth, fileSize)
