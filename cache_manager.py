@@ -5,8 +5,12 @@ class CacheManager:
     def __init__(self, cache_size):
         self.cache_size = cache_size
         self.cache = {}
+        self.relaxing = False
 
     def _relax_cache(self):
+        if self.relaxing:
+            return
+        self.relaxing = True
         if len(self.cache) >= float(self.cache_size) * config.ELASTIC_CACHE_OVERHEAD:
             entries_to_evict = len(self.cache) - self.cache_size 
             last_access_times = [(self.cache[x], x) for x in self.cache]
@@ -17,6 +21,7 @@ class CacheManager:
                 if lat[1] in self.cache:
                     # call the evict function
                     lat[1].evict()
+        self.relaxing = False
 
     def add_to_cache(self, blob):
         have_to_relax = True if blob not in self.cache else False

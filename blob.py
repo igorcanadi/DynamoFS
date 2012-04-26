@@ -9,11 +9,11 @@ def dirties(fn):
     as dirty upon entry.
     """
     def wrapped(self, *args, **kwargs):
+        self._assert_valid_state()
         if self.clean:
             self.dirty = True
             self._key = None
             self._blob = None
-        self._assert_valid_state()
         return fn(self, *args, **kwargs)
     return wrapped
 
@@ -23,13 +23,13 @@ def validate(fn):
     fetching data if needed, and marking the blob as valid.
     """
     def wrapped(self, *args, **kwargs):
+        self._assert_valid_state()
         if self.invalid:
             self._blob = self.cntl.getdata(self._key)
             self._deserialize_data(self._blob)
             self.dirty = False
             self.valid = True
             self._key = None
-        self._assert_valid_state()
         return fn(self, *args, **kwargs)
     return wrapped
 
@@ -54,6 +54,8 @@ class Blob(object):
 
     def _assert_valid_state(self):
         assert(self._key != None or self.valid == True)
+        # TODO: is this valid assert?
+        #assert(self._key != None or self.dirty == True)
         assert(self.valid == True or self.dirty == False)
 
     def _delete_data(self):
@@ -69,7 +71,7 @@ class Blob(object):
         is both dirty and valid.
         """
         if self.valid:
-            if self.dirty:
+            if self.dirty or self._key == None:
                 self.commit()
             for child in self.children:
                 child.evict()
@@ -78,6 +80,7 @@ class Blob(object):
         self._delete_data()
         self._blob = None
         self.cache_manager.remove_from_cache(self)
+        self._assert_valid_state()
 
     def commit(self):
         """
@@ -85,7 +88,7 @@ class Blob(object):
         returns to an external caller, the file system will be in a consistent and
         up-to-date state. If this node is clean, commit is a no-op.
         """
-        if self.dirty:
+        if self.dirty or self._key == None:
             self._flush_down()
         self._flush_up()
 
@@ -103,7 +106,7 @@ class Blob(object):
         """
         For each child, call _flush_down on that child. Then, call _flush on self.
         """
-        if self.dirty:
+        if self.dirty or self._key == None:
             for child in self.children:
                 child._flush_down()
             self._flush()
@@ -112,7 +115,7 @@ class Blob(object):
         """
         If this blob is dirty, push this blob to store and set this blob to clean.
         """
-        if self.dirty:
+        if self.dirty or self._key == None:
             self.cntl.putdata(self.key, self.blob)
             self.dirty = False
 
