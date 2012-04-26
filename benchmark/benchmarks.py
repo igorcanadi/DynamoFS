@@ -8,6 +8,7 @@ import dynamo_fs
 from berkeleydb_backend import BerkeleyDBBackend
 from dict_backend import DictBackend
 from local_fs import LocalFS
+from dynamodb_backend import DynamoDBBackend
 import os
 import file
 import shutil
@@ -78,27 +79,43 @@ def runAllWithFs(fs, depth, fileSize):
     filename = dynamo_fs.concatPath(cwd, 'the_file')
     return runAllWithFile(fs, filename, fileSize)
     
+def ensureDelete(filename):
+    try:
+        os.unlink(filename)
+    except:
+        pass
+    
 # Runs all four benchmarks on BerkeleyDB.
 def runAllWithBerkeleyDB(depth, fileSize):
     backingFile = 'benchmark/data/bench.db'
-    try:
-        os.unlink(backingFile)
-    except:
-        pass
+    fsRootFile =  'benchmark/data/fs_root.txt'
+    ensureDelete(backingFile)
+    ensureDelete(fsRootFile)
+
     backend = BerkeleyDBBackend(backingFile)
-    fs = dynamo_fs.DynamoFS(backend, 'benchmark/data/fs_root.txt')
+    fs = dynamo_fs.DynamoFS(backend, fsRootFile)
     
     return runAllWithFs(fs, depth, fileSize)
 
 # Runs all four benchmarks on a DictBackend.
 def runAllWithDict(depth, fileSize):
     backingFile = 'benchmark/data/bench.db'
-    try:
-        os.unlink(backingFile)
-    except:
-        pass
+    fsRootFile =  'benchmark/data/fs_root.txt'
+    ensureDelete(backingFile)
+    ensureDelete(fsRootFile)
+    
     backend = DictBackend(backingFile)
-    fs = dynamo_fs.DynamoFS(backend, 'benchmark/data/fs_root.txt')
+    fs = dynamo_fs.DynamoFS(backend, fsRootFile)
+    
+    return runAllWithFs(fs, depth, fileSize)
+
+# Runs all four benchmarks on BerkeleyDB.
+def runAllWithDynamoDB(depth, fileSize):
+    fsRootFile =  'benchmark/data/fs_root.txt'
+    ensureDelete(fsRootFile)
+    
+    backend = DynamoDBBackend()
+    fs = dynamo_fs.DynamoFS(backend, fsRootFile)
     
     return runAllWithFs(fs, depth, fileSize)
 
@@ -106,7 +123,7 @@ def runAllWithDict(depth, fileSize):
 def runAllWithLocalFS(depth, fileSize):
     root = 'benchmark/data/localfs'
     try:
-        shutil.rmtree(root)
+        shutil.rmtree(root) # Nuke the local fs.
     except:
         pass
     fs = LocalFS(root)
