@@ -5,10 +5,6 @@ Code to perform official benchmarks for the paper's evaluation section.
 from random import randint
 import benchmark_utils
 import dynamo_fs
-from berkeleydb_backend import BerkeleyDBBackend
-from dict_backend import DictBackend
-from local_fs import LocalFS
-from dynamodb_backend import DynamoDBBackend
 import os
 import file
 import shutil
@@ -87,6 +83,8 @@ def ensureDelete(filename):
     
 # Runs all four benchmarks on BerkeleyDB.
 def runAllWithBerkeleyDB(depth, fileSize):
+    from berkeleydb_backend import BerkeleyDBBackend
+    
     backingFile = 'benchmark/data/bench.db'
     fsRootFile =  'benchmark/data/fs_root.txt'
     ensureDelete(backingFile)
@@ -99,6 +97,8 @@ def runAllWithBerkeleyDB(depth, fileSize):
 
 # Runs all four benchmarks on a DictBackend.
 def runAllWithDict(depth, fileSize):
+    from dict_backend import DictBackend
+    
     backingFile = 'benchmark/data/bench.db'
     fsRootFile =  'benchmark/data/fs_root.txt'
     ensureDelete(backingFile)
@@ -111,6 +111,8 @@ def runAllWithDict(depth, fileSize):
 
 # Runs all four benchmarks on BerkeleyDB.
 def runAllWithDynamoDB(depth, fileSize):
+    from dynamodb_backend import DynamoDBBackend
+    
     fsRootFile =  'benchmark/data/fs_root.txt'
     ensureDelete(fsRootFile)
     
@@ -121,6 +123,8 @@ def runAllWithDynamoDB(depth, fileSize):
 
 # Runs all four benchmarks on a LocalFS.
 def runAllWithLocalFS(depth, fileSize):
+    from local_fs import LocalFS
+    
     root = 'benchmark/data/localfs'
     try:
         shutil.rmtree(root) # Nuke the local fs.
