@@ -71,7 +71,7 @@ class Blob(object):
         self.valid = False
         self._delete_data()
         self._blob = None
-        self.cache_manager.remove_from_cache(self.evict)
+        self.cache_manager.remove_from_cache(self)
 
     def commit(self):
         """

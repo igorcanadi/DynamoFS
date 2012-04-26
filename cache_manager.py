@@ -19,9 +19,10 @@ class CacheManager:
                     lat[1].evict()
 
     def add_to_cache(self, blob):
-        if blob not in self.cache:
-            self._relax_cache()
+        have_to_relax = True if blob not in self.cache else False
         self.cache[blob] = time.time()
+        if have_to_relax:
+            self._relax_cache()
 
     def remove_from_cache(self, blob):
         if blob in self.cache:
