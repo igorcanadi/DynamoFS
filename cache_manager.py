@@ -19,9 +19,11 @@ class CacheManager:
                     lat[1]()
 
     def add_to_cache(self, evict_function):
+        if evict_function not in self.cache:
+            self._relax_cache()
         self.cache[evict_function] = time.time()
-        self._relax_cache()
 
     def remove_from_cache(self, evict_function):
-        del self.cache[evict_function]
+        if evict_function in self.cache:
+            del self.cache[evict_function]
 
