@@ -71,7 +71,7 @@ class Blob(object):
         self.valid = False
         self._delete_data()
         self._blob = None
-        self.remove_from_cache(self.evict)
+        self.cache_manager.remove_from_cache(self.evict)
 
     def commit(self):
         """
@@ -226,7 +226,7 @@ class DirectoryBlob(Blob):
             self.items = dict()
 
     def _delete_data(self):
-        del self.items
+        self.items = dict()
 
     @validate
     def __getitem__(self, filename):
@@ -298,7 +298,7 @@ class BlockListBlob(Blob):
             self.blocks = list()
 
     def _delete_data(self):
-        del self.blocks
+        self.blocks = list()
 
     @validate
     def __getitem__(self, item):
@@ -362,7 +362,7 @@ class BlockBlob(Blob):
             self.data = array('B')
 
     def _delete_data(self):
-        del self.data
+        self.data = array('B')
 
     @validate
     def __getitem__(self, index):
