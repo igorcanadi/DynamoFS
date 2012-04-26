@@ -18,10 +18,7 @@ def _get_leaf_filename(path):
 
 # Appends a child name to an existing parent path.
 def concatPath(parent, child):
-    if parent.endswith('/'):
-        return parent + child
-    else:
-        return parent + '/' + child
+    return parent.rstrip('/') + '/' + child.lstrip('/')
 
 class DynamoFS:
     def __init__(self, server, root_filename):

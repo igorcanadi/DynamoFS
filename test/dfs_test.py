@@ -2,9 +2,6 @@ import dynamo_fs
 import file
 import os
 import dict_backend 
-
-__author__ = 'jpaton'
-
 import unittest
 
 class BasicTest(unittest.TestCase):

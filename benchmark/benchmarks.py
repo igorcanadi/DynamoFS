@@ -104,7 +104,7 @@ def runAllWithDict(depth, fileSize):
 
 # Runs all four benchmarks on a LocalFS.
 def runAllWithLocalFS(depth, fileSize):
-    root = 'benchmark/data/bench'
+    root = 'benchmark/data/localfs'
     try:
         shutil.rmtree(root)
     except:
