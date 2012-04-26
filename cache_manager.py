@@ -19,7 +19,6 @@ class CacheManager:
                     lat[1].evict()
 
     def add_to_cache(self, blob):
-        print blob._key
         if blob not in self.cache:
             self._relax_cache()
         self.cache[blob] = time.time()
