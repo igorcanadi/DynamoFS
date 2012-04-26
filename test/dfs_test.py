@@ -22,7 +22,7 @@ class BasicTest(unittest.TestCase):
         self.dfs.debug_output_whole_tree()
 
     def tearDown(self):
-        print "Final state"
+        print "Final state (" + self.__class__.__name__ + ")"
         self.dfs.debug_output_whole_tree()
         del self.dfs
         del self.ss
@@ -156,18 +156,22 @@ class FlushTestCase(BasicTest):
         self.assertEqual(f1.read(100), f2.read(100))
         f1.close()
         f2.close()
+        
         f2 = self.dfs.open('/movies/to_watch', 'w')
         f2.write('harry potter (DONE); star wars')
         f2.close()
+        
         f1 = self.dfs.open('/movies/to_watch', 'r')
         
         self.dfs.flush()
         
         f2 = self.dfs.open('/movies/shared_movies/to_watch', 'r')
-        f1.close()
-        f2.close()
+        
         self.assertEqual(f1.read(100), 'harry potter (DONE); star wars')
         self.assertEqual(f2.read(100), 'harry potter; star wars')
+        
+        f1.close()
+        f2.close()
 
 class SimpleSeekTestCase(BasicTest):
     def runTest(self):
