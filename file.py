@@ -26,32 +26,36 @@ class File:
             return True
         return False
 
-    # TODO maybe change the parameters to array instead of string?
-    def write(self, data):
+    def write_array(self, data):
         if self.mode != 'w':
             raise Exception('Not writable, sorry')
         data_index = 0
         while data_index < len(data):
             free_space_in_page = PAGE_SIZE - self._offset[1]
             self.blob[self._offset[0]].write(self._offset[1],
-                    map(ord, data[data_index:(data_index + free_space_in_page)]))
+                    data[data_index:(data_index + free_space_in_page)])
             self._advance_offset(min(free_space_in_page, len(data) - data_index))
             data_index += free_space_in_page
 
-    def read(self, max_len):
+    def write(self, data):
+        self.write_array(map(ord, data))
+
+    def read_array(self, max_len):
         if self.mode != 'r':
             raise Exception('Not readable, sorry')
-        ret = ""
+        ret = array('B')
         while len(ret) < max_len:
             if self._offset_at_the_end():
                 break
             reading_bytes = self.blob[self._offset[0]].size() - \
                 self._offset[1]
             reading_bytes = min(reading_bytes, max_len - len(ret))
-            ret += "".join(map(chr, 
-                    self.blob[self._offset[0]].read(self._offset[1], reading_bytes)))
+            ret.extend(self.blob[self._offset[0]].read(self._offset[1], reading_bytes))
             self._advance_offset(reading_bytes)
         return ret
+
+    def read(self, max_len):
+        return "".join(map(chr, self.read_array(max_len)))
 
     # The lseek() function allows the file offset to be set beyond the end of
     # the existing end-of-file of the file. If data is later written at this
