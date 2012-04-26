@@ -10,13 +10,19 @@ def run(fs, size):
     # Perform benchmarking. 
     sampler = BenchmarkTimer()
     sampler.begin()
+    # write
     f = fs.open('big_file', 'w')
-
     chunck_size = 10000
     for i in range(size/chunck_size):
         f.write('a' * chunck_size)
-    
     f.close()
+
+    # read
+    f = fs.open('big_file', 'r')
+    for i in range(size/chunck_size):
+        a = f.read(chunck_size)
+    f.close()
+
     sampler.end()
     
     return sampler
