@@ -13,6 +13,7 @@ def dirties(fn):
             self.dirty = True
             self._key = None
             self._blob = None
+        self._assert_valid_state()
         return fn(self, *args, **kwargs)
     return wrapped
 
@@ -28,6 +29,7 @@ def validate(fn):
             self.dirty = False
             self.valid = True
             self._key = None
+        self._assert_valid_state()
         return fn(self, *args, **kwargs)
     return wrapped
 
@@ -49,6 +51,10 @@ class Blob(object):
         self.dirty = valid
         self.cntl = cntl
         self.cache_manager = cache_manager
+
+    def _assert_valid_state(self):
+        assert(self._key != None or self.valid == True)
+        assert(self.valid == True or self.dirty == False)
 
     def _delete_data(self):
         """
