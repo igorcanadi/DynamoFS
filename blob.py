@@ -76,10 +76,10 @@ class Blob(object):
         is both dirty and valid.
         """
         self._assert_valid_state()
+        self.commit()
         if self.valid:
             for child in self.children:
                 child.evict()
-        self.commit()
         self.dirty = False
         self.valid = False
         self._delete_data()
@@ -93,6 +93,7 @@ class Blob(object):
         returns to an external caller, the file system will be in a consistent and
         up-to-date state. If this node is clean, commit is a no-op.
         """
+        self._assert_valid_state()
         if self.dirty or self._key == None:
             self._flush_down()
         self._flush_up()
