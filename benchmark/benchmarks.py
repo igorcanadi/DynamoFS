@@ -7,8 +7,10 @@ import benchmark_utils
 import dynamo_fs
 from berkeleydb_backend import BerkeleyDBBackend
 from dict_backend import DictBackend
+from local_fs import LocalFS
 import os
 import file
+import shutil
 
 # General Note: fileSizes will be rounded up to the nearest multiple of
 # chunk size, for all benchmarks.
@@ -97,5 +99,16 @@ def runAllWithDict(depth, fileSize):
         pass
     backend = DictBackend(backingFile)
     fs = dynamo_fs.DynamoFS(backend, 'benchmark/data/fs_root.txt')
+    
+    return runAllWithFs(fs, depth, fileSize)
+
+# Runs all four benchmarks on a LocalFS.
+def runAllWithLocalFS(depth, fileSize):
+    root = 'benchmark/data/bench'
+    try:
+        shutil.rmtree(root)
+    except:
+        pass
+    fs = LocalFS(root)
     
     return runAllWithFs(fs, depth, fileSize)
