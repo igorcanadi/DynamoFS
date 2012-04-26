@@ -121,6 +121,7 @@ class DynamoFS:
 
     def debug_output_whole_tree(self):
         print "---------------------------- WHOLE TREE -----------------"
+#        self.root.commit()
         self._output_whole_tree(self.root, 0)
         print "---------------------------- END -----------------"
 

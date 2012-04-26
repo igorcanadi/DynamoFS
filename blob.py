@@ -42,8 +42,6 @@ class Blob(object):
         valid: whether this blob is valid -- that is, should the data be fetched from
             the backend before this blob can be read?
         """
-        if (key == None) != valid:
-            raise Exception("Invariant violated for Blob constructor")
         self._key = key
         self._blob = None
         self.parent = parent
@@ -51,11 +49,18 @@ class Blob(object):
         self.dirty = valid
         self.cntl = cntl
         self.cache_manager = cache_manager
+        self._assert_valid_state()
+
+    def my_name(self):
+        if self.parent == None:
+            return "/"
+        else:
+            return self.parent.my_name() + "/" + self.parent.locate(self)
 
     def _assert_valid_state(self):
         assert(self._key != None or self.valid == True)
         # TODO: is this valid assert?
-        #assert(self._key != None or self.dirty == True)
+#        assert(self._key != None or self.dirty == True)
         assert(self.valid == True or self.dirty == False)
 
     def _delete_data(self):
@@ -70,11 +75,11 @@ class Blob(object):
         evict my data field from main memory. It only does anything if this blob
         is both dirty and valid.
         """
+        self._assert_valid_state()
         if self.valid:
-            if self.dirty or self._key == None:
-                self.commit()
             for child in self.children:
                 child.evict()
+        self.commit()
         self.dirty = False
         self.valid = False
         self._delete_data()
@@ -240,14 +245,19 @@ class DirectoryBlob(Blob):
     def _delete_data(self):
         self.items = dict()
 
+    def locate(self, other):
+        for k, v in self.items.items():
+            if v == other:
+                return k
+        raise Exception("%s not in %s" % (other, self.items))
+
     @validate
     def __getitem__(self, filename):
         """
         Returns the blob associated with key
         """
- 
         if filename not in self.items:
-            raise IOError()
+            raise IOError("%s not found" % filename)
         return self.items[filename]
 
     @validate
@@ -311,6 +321,9 @@ class BlockListBlob(Blob):
 
     def _delete_data(self):
         self.blocks = list()
+
+    def locate(self, other):
+        return "Block of " + self.parent.locate(self)
 
     @validate
     def __getitem__(self, item):

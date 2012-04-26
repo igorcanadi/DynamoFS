@@ -20,13 +20,22 @@ class CacheManager:
                     break
                 if lat[1] in self.cache:
                     # call the evict function
+                    if lat[1]._key == None:
+                        key = "None"
+                    else:
+                        key = lat[1]._key[:5]
+#                    print "Cache evict: %s: %s %s" % (lat[1].__class__, lat[1].my_name(), key)
                     lat[1].evict()
         self.relaxing = False
 
     def add_to_cache(self, blob):
-        have_to_relax = True if blob not in self.cache else False
+        if blob not in self.cache:
+            have_to_relax = True
+        else:
+            have_to_relax = False
         self.cache[blob] = time.time()
         if have_to_relax:
+#            print "Cache add: %s: %s %s" % (blob.__class__, blob.my_name(), blob._key[:5])
             self._relax_cache()
 
     def remove_from_cache(self, blob):
