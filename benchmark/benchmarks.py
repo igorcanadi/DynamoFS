@@ -29,7 +29,7 @@ def write(fs, filename, fileSize, sampler, rand):
     while bytesLeft > 0:
         if rand: # Seek to a random place.
             f.seek(randPos(fileSize), file.SEEK_SET)
-        f.write(benchmark_utils.semirandomString(CHUNK_SIZE))
+        f.write_array(benchmark_utils.semirandomArray(CHUNK_SIZE))
         bytesLeft -= CHUNK_SIZE
         
     f.close()
@@ -45,7 +45,7 @@ def read(fs, filename, fileSize, sampler, rand):
     while bytesLeft > 0:
         if rand: # Seek to a random place.
             f.seek(randPos(fileSize), file.SEEK_SET)
-        f.read(CHUNK_SIZE)
+        f.read_array(CHUNK_SIZE)
         bytesLeft -= CHUNK_SIZE
         
     f.close()

@@ -1,5 +1,6 @@
 # Timing and other utilities for micro-benchmarking.
 
+from array import array
 import time
 import dynamo_fs
 import os
@@ -50,6 +51,12 @@ def makeDepth(fs, root, n):
         cwd = dynamo_fs.concatPath(cwd, name)
     return cwd
 
+def randomArray(length, rangeMin = 32, rangeMax = 126):
+    ar = array('B')
+    for _ in range(0, length):
+        ar.expand(random.randint(rangeMin, rangeMax))
+    return ar
+
 # Generates a random string of printable ASCII. Optionally, a sub-range of
 # printable ASCII may be specified using min and max.
 def randomString(length, rangeMin = 32, rangeMax = 126):
@@ -70,3 +77,6 @@ def randomDirName():
 # be the same randomly chosen character.
 def semirandomString(length, rangeMin = 32, rangeMax = 126):
     return chr(random.randint(rangeMin, rangeMax)) * length
+
+def semirandomArray(length, rangeMin = 32, rangeMax = 126):
+    return array('b', [random.randint(rangeMin, rangeMax)] * length)
