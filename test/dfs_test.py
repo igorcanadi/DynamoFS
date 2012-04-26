@@ -87,11 +87,15 @@ class MvTestCase(BasicTest):
     def runTest(self):
         super(MvTestCase, self).runTest()
         self.dfs.mkdir('/', 'a')
+        self.dfs.mkdir('/', 'b')
         self.dfs.mkdir('/a', 'test_dir')
         self.dfs.mkdir('/a', 'works')
         self.assertEqual(self.dfs.ls('/a'), ['test_dir', 'works'])
-        self.dfs.mv('/a/', 'test_dir', 'pas')
+        self.dfs.mv('/a/test_dir', '/a/pas')
         self.assertEqual(self.dfs.ls('/a'), ['works', 'pas'])
+        self.dfs.mv('/a/pas', '/b/macka')
+        self.assertEqual(self.dfs.ls('/b'), ['macka'])
+        self.assertEqual(self.dfs.ls('/a'), ['works'])
 
 class SharingTestCase(BasicTest):
     def runTest(self):
