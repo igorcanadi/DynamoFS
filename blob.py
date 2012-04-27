@@ -330,8 +330,6 @@ class BlockListBlob(Blob):
 
     @validate
     def __getitem__(self, item):
-        # I have been accessed, don't evict me from cache!
-        self.cache_manager.add_to_cache(self)
         if len(self.blocks) - 1 < item:
             # block list is too short; expand
             self.dirty = True
@@ -396,8 +394,6 @@ class BlockBlob(Blob):
 
     @validate
     def __getitem__(self, index):
-        # I have been accessed, don't evict me from cache!
-        self.cache_manager.add_to_cache(self)
         if len(self.data) - 1 < index:
             raise IndexError("index out of range")
         return self.data[index]
