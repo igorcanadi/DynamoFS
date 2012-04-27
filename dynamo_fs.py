@@ -41,6 +41,7 @@ class DynamoFS:
 
     def cleanup(self):
         self.root.commit()
+        self.cache_manager.kill_timer()
 
     def __del__(self):
         self.cleanup()

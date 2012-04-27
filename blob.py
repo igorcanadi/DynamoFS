@@ -10,6 +10,8 @@ def dirties(fn):
     """
     def wrapped(self, *args, **kwargs):
         self._assert_valid_state()
+        # I have been accessed, don't evict me from cache!
+        self.cache_manager.add_to_cache(self)
         if self.clean:
             self.dirty = True
             self._key = None
@@ -25,6 +27,8 @@ def validate(fn):
     def wrapped(self, *args, **kwargs):
         self._assert_valid_state()
         if self.invalid:
+            # I have been accessed, don't evict me from cache!
+            self.cache_manager.add_to_cache(self)
             self._blob = self.cntl.getdata(self._key)
             self._deserialize_data(self._blob)
             self.dirty = False
@@ -174,8 +178,6 @@ class Blob(object):
         """
         if self._key == None:
             self._update_hash_and_blob()
-        # I have been accessed, don't evict me from cache!
-        self.cache_manager.add_to_cache(self)
         return self._key
 
     @property
@@ -328,6 +330,8 @@ class BlockListBlob(Blob):
 
     @validate
     def __getitem__(self, item):
+        # I have been accessed, don't evict me from cache!
+        self.cache_manager.add_to_cache(self)
         if len(self.blocks) - 1 < item:
             # block list is too short; expand
             self.dirty = True
@@ -392,6 +396,8 @@ class BlockBlob(Blob):
 
     @validate
     def __getitem__(self, index):
+        # I have been accessed, don't evict me from cache!
+        self.cache_manager.add_to_cache(self)
         if len(self.data) - 1 < index:
             raise IndexError("index out of range")
         return self.data[index]
