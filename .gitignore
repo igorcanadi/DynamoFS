@@ -4,7 +4,7 @@ benchmark/data/localfs
 benchmark/data/bench.db
 jython2.5.2/cachedir
 test/data/test.dat
-AwsCredentials.properties
+aws_credentials.py
 fs_root.txt
 server_stub_backup.dat
 sqlite.db
