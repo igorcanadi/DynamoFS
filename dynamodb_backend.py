@@ -1,32 +1,9 @@
 import sys
 import os
 import benchmark_utils
+from boto.dynamodb.layer1 import Layer1
+import aws_credentials
 
-# Adds all the jar files in a directory to the path. Setting "recursive" to True
-# will cause this method to descending into directories, searching for JARs.
-def addJarsFrom(dirPath, recursive):
-    jars = os.listdir(dirPath)
-    for jar in jars:
-        jarPath = dirPath + "/" + jar
-        if os.path.isdir(jarPath):
-            if recursive:
-                addJarsFrom(jarPath, recursive)            
-        elif jar.endswith(".jar"):
-            sys.path.append(jarPath)
-
-# Initialize the classpath and import AWS Java classes.
-awsLib = "aws-java-sdk-1.3.8"
-addJarsFrom(awsLib + "/lib", False)
-addJarsFrom(awsLib + "/third-party", True)
-
-from java.io import *
-from java.util import *
-from com.amazonaws import *
-from com.amazonaws.auth import *
-from com.amazonaws.services.dynamodb import *
-from com.amazonaws.services.dynamodb.model import *
-
-CREDENTIALS_FILE = "AwsCredentials.properties"
 TABLE_NAME = "data"
 
 # We use single-character attribute names to save space in requests.
@@ -48,146 +25,133 @@ sampler = benchmark_utils.BenchmarkTimer()
 class DynamoDBBackend:
     
     def __init__(self):
-        # Initialize the client library, using the credentials.
-        credentials = PropertiesCredentials(FileInputStream(CREDENTIALS_FILE))
-        self.client = AmazonDynamoDBClient(credentials)
-        self.capacityUsed = 0.0
+        self.client = Layer1(aws_credentials.accessKey,
+                             aws_credentials.secretKey)                                                  
+        self.capacityUsed = 0.0    
     
         
     # Makes an API Key object from a key string.
-    def apiKey(self, key):
+    def _apiKey(self, key):
         if (key is None) or (len(key) == 0):
             # Empty keys are not permitted by Amazon.
             raise KeyError
-            
-        return Key().withHashKeyElement(AttributeValue().withS(key))
+        return {'HashKeyElement':{'S':key}}    
     
     
     # Increments the counter of capacity used.
     def useCapacity(self, result):
-        self.capacityUsed += result.getConsumedCapacityUnits()
+        self.capacityUsed += result['ConsumedCapacityUnits']
 
 
     def put(self, key, value):
-        key = self.apiKey(key)
-        
         sampler.begin()
         
-        # Issue an UpdateItem request that atomically increments the refCount
-        # and puts the value. This will transparently create the item if it
-        # isn't there already.
-        updates = HashMap()
+        try:
+            # Issue an UpdateItem request to increment the refCount, putting the value
+            # if necessary.
+            key = self._apiKey(key)
+            updates = {REF_COUNT:{'Value': {'N':'1'},
+                                  'Action': 'ADD'},
+                       VALUE:{'Value':{'S':value},
+                              'Action': 'PUT'}
+                       }
+            result = self.client.update_item(TABLE_NAME, key, updates)
+            self.useCapacity(result)
         
-        # Increment the refCount if it exists, or set it to 1 if it doesn't exist.
-        updates.put(REF_COUNT, AttributeValueUpdate()
-                    .withAction(AttributeAction.ADD)
-                    .withValue(AttributeValue().withN("1")))
-        
-        # Simply put the value.
-        updates.put(VALUE, AttributeValueUpdate()
-                    .withAction(AttributeAction.PUT)
-                    .withValue(AttributeValue().withS(value)))
-        
-        request = (UpdateItemRequest()
-                   .withTableName(TABLE_NAME)
-                   .withKey(key)
-                   .withAttributeUpdates(updates))
-        result = self.client.updateItem(request)
-        self.useCapacity(result)
-        
-        sampler.end()
+        finally:
+            sampler.end()
 
 
     def get(self, key):
-        key = self.apiKey(key)
-        
         sampler.begin()
         
-        # Issue an eventually-consistent GetItem request.
-        request = (GetItemRequest()
-                   .withTableName(TABLE_NAME)
-                   .withConsistentRead(False) # No strong consistency.
-                   .withKey(key)
-                   .withAttributesToGet(Collections.singleton(VALUE)))
-        result = self.client.getItem(request)
-        self.useCapacity(result)
-        
-        item = result.getItem()
-        if not(item is None):
-            return item.get(VALUE).getS()
-        
-        else:
-            # If the eventually consistent request failed, try a consistent GetItem request.
-            request = request.withConsistentRead(True)
-            result = self.client.getItem(request)
+        try:
+            # Issue an eventually-consistent GetItem request.
+            key = self._apiKey(key)
+            result = self.client.get_item(TABLE_NAME, key, [VALUE], consistent_read=False)
             self.useCapacity(result)
             
+            item = result['Item']
             if not(item is None):
-                return item.get(VALUE).getS()
-            
-            else: # The key must not exist in the database.
-                raise KeyError
-            
-        
-        sampler.end()
+                return item[VALUE]['S']
+                    
+            else:
+                # If the eventually consistent request failed, try a consistent GetItem request.
+                result = self.client.get_item(TABLE_NAME, key, [VALUE], consistent_read=True)
+                self.useCapacity(result)
+                
+                item = result['Item']
+                if not(item is None):
+                    return item[VALUE]['S']
+                
+                else: # The key must not exist in the database.
+                    raise KeyError
+        finally:
+            sampler.end()
 
 
     # Issues a request to add a specific delta value (integer) to the refCount for a key.
     def _addToRefCount(self, key, delta):
         # Issue an UpdateItem request to increment the refCount.
-        updates = HashMap()
-        
-        # Increment the refCount.
-        updates.put(REF_COUNT, AttributeValueUpdate()
-                    .withAction(AttributeAction.ADD)
-                    .withValue(AttributeValue().withN(str(delta))))
-        
-        request = (UpdateItemRequest()
-                   .withTableName(TABLE_NAME)
-                   .withKey(key)
-                   .withAttributeUpdates(updates))
-        result = self.client.updateItem(request)
+        updates = {REF_COUNT:{'Value': {'N':str(delta)},
+                              'Action': 'ADD'},
+                   }
+        result = self.client.update_item(TABLE_NAME, key, updates)
         self.useCapacity(result)
-
+        
 
     def incRefCount(self, key):
-        key = self.apiKey(key)
-        
         sampler.begin()
         
-        # Issue an UpdateItem request to increment the refCount.
-        self._addToRefCount(key, 1)
+        try:
+            key = self._apiKey(key)
+                    
+            # Issue an UpdateItem request to increment the refCount.
+            self._addToRefCount(key, 1)
         
-        sampler.end()
+        finally:
+            sampler.end()
         
         
     def decRefCount(self, key):
-        key = self.apiKey(key)
-        
         sampler.begin()
         
-        # Issue an UpdateItem request to decrement the refCount.
-        self._addToRefCount(key, -1)
-        
-        # Atomically delete the item, if its reference count is zero.
-        expectation = HashMap()
-        
-        # Check refCount.
-        expectation.put(REF_COUNT, ExpectedAttributeValue()
-                        .withValue(AttributeValue().withN("0")))
-        
-        request = (DeleteItemRequest()
-                   .withTableName(TABLE_NAME)
-                   .withKey(key)
-                   .withExpected(expectation))
-        
         try:
-            result = self.client.deleteItem(request)
-            self.useCapacity(result)
-        except ConditionalCheckFailedException:
-            pass # Do nothing. This just means the refCount was positive.
-        
-        sampler.end()
+            key = self._apiKey(key)
+            
+            # Issue an UpdateItem request to decrement the refCount.
+            self._addToRefCount(key, -1)
+            
+            
+            
+            
+            # TODO left off boto conversion here.
+            
+            
+            
+            
+            
+            # Atomically delete the item, if its reference count is zero.
+            expectation = HashMap()
+            
+            # Check refCount.
+            expectation.put(REF_COUNT, ExpectedAttributeValue()
+                            .withValue(AttributeValue().withN("0")))
+            
+            request = (DeleteItemRequest()
+                       .withTableName(TABLE_NAME)
+                       .withKey(key)
+                       .withExpected(expectation))
+            
+            try:
+                result = self.client.deleteItem(request)
+                self.useCapacity(result)
+            except ConditionalCheckFailedException:
+                pass # Do nothing. This just means the refCount was positive.
+            
+        finally:    
+            sampler.end()
+    
     
     def nuke(self):
         while True:
@@ -213,7 +177,7 @@ class DynamoDBBackend:
                     writeRequests = ArrayList()
                     batchSize = 0
                     while (index < total) and (batchSize < MAX_BATCH_SIZE):
-                        key = self.apiKey(itemsToDelete.get(index).get(KEY).getS())
+                        key = self._apiKey(itemsToDelete.get(index).get(KEY).getS())
                         writeRequests.add(WriteRequest()
                                           .withDeleteRequest(DeleteRequest()
                                                              .withKey(key)))
