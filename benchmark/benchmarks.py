@@ -155,6 +155,18 @@ def runSimpleDB(depth, fileSize):
     
     return runAllWithFs(fs, depth, fileSize)
 
+# Runs all four benchmarks on BerkeleyDB.
+def runS3(depth, fileSize):
+    from s3_backend import S3Backend
+    
+    fsRootFile =  'benchmark/data/fs_root.txt'
+    ensureDelete(fsRootFile)
+    
+    backend = S3Backend()
+    fs = dynamo_fs.DynamoFS(backend, fsRootFile)
+    
+    return runAllWithFs(fs, depth, fileSize)
+
 # Runs all four benchmarks on a LocalFS.
 def runLocalFS(depth, fileSize):
     from local_fs import LocalFS
