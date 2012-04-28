@@ -1,8 +1,9 @@
 import sys
 import os
+from time import sleep
 import benchmark_utils
 from boto.dynamodb.layer1 import Layer1
-from boto.exception import DynamoDBResponseError
+from boto.dynamodb.exceptions import DynamoDBKeyNotFoundError
 import aws_credentials
 
 TABLE_NAME = "data"
@@ -87,6 +88,9 @@ class DynamoDBBackend:
                 
                 else: # The key must not exist in the database.
                     raise KeyError
+                
+        except DynamoDBKeyNotFoundError:
+            raise KeyError
         finally:
             sampler.end()
 
@@ -110,6 +114,8 @@ class DynamoDBBackend:
             # Issue an UpdateItem request to increment the refCount.
             self._addToRefCount(key, 1)
         
+        except DynamoDBKeyNotFoundError:
+            raise KeyError
         finally:
             sampler.end()
         
@@ -129,43 +135,48 @@ class DynamoDBBackend:
             try:    
                 result = self.client.delete_item(TABLE_NAME, key, expectation)
                 self.useCapacity(result)
-            except DynamoDBResponseError:
+            except:
                 pass # The conditional check for a zero refCount must have failed; this is OK.
         
+        except DynamoDBKeyNotFoundError:
+            raise KeyError
         finally:    
             sampler.end()
     
     
     def nuke(self):
-        while True:
-            # Issue a Scan request to learn the contents of the table.
-            result = self.client.scan(TABLE_NAME, attributes_to_get=[KEY])
-            self.useCapacity(result)
+        # Delete and re-create the table.
+        try:
+            self.client.delete_table(TABLE_NAME)
             
-            # If there are no items in the table, return.
-            if result['Count'] == 0:
-                return # We have emptied the table.
-            else:
-                itemsToDelete = result['Items']
+            # Wait for the table to be deleted.
+            while True:
+                sleep(0.01)
+                try:
+                    self.client.describe_table(TABLE_NAME)
+                except:
+                    break # The table must not exist anymore.
                 
-                # Delete the items, sending multiple BatchWriteRequests if the number
-                # of items exceeds the ceiling.
-                total = len(itemsToDelete)
-                index = 0
-                while index < total:
-                    # Build a list of delete requests for the records returned by the scan.
-                    writeRequests = []
-                    batchSize = 0
-                    while (index < total) and (batchSize < MAX_BATCH_SIZE):
-                        key = self._apiKey(itemsToDelete[index][KEY]['S'])
-                        writeRequests.append({'DeleteRequest':{'Key':key}})
-                        index += 1
-                        batchSize += 1
-                    
-                    # Issue a BatchWriteItems request to delete the scanned items.
-                    result = self.client.batch_write_item({TABLE_NAME:writeRequests})
-                    result = result['Responses'][TABLE_NAME] # Access statistics for this table.
-                    self.useCapacity(result)
+        except:
+            pass # The table must have been deleted already.
+        
+        # Re-create the table.
+        self.client.create_table(TABLE_NAME,
+                                 {'HashKeyElement':{'AttributeName':KEY,
+                                                    'AttributeType':'S'}},
+                                 {'ReadCapacityUnits':10,
+                                  'WriteCapacityUnits':5})
+        
+        # Wait for the table to be created.
+        while True:
+            sleep(0.01)
+            try:
+                result = self.client.describe_table(TABLE_NAME)
+                if result['Table']['TableStatus'] == 'ACTIVE':
+                    break
+            except:
+                pass # The table must not exist quite yet.
+        
                     
     def flush(self):
         pass # No-op.
