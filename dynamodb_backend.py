@@ -1,5 +1,3 @@
-import sys
-import os
 from time import sleep
 import benchmark_utils
 from boto.dynamodb.layer1 import Layer1
