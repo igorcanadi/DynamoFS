@@ -130,13 +130,16 @@ class DynamoDBBackend:
             self._addToRefCount(key, -1)
             
             # Atomically delete the item, if its reference count is zero.
-            expectation = {REF_COUNT:{'Value':{'N':0}}}
+            expectation = {REF_COUNT:{'Value':{'N':'0'}}}
         
             try:    
                 result = self.client.delete_item(TABLE_NAME, key, expectation)
                 self.useCapacity(result)
-            except:
-                pass # The conditional check for a zero refCount must have failed; this is OK.
+            except Exception as e:
+                if e.error_message == 'The conditional request failed':
+                    pass # The conditional check for a zero refCount must have failed; this is OK.
+                else: # This is some other error, so propagate it.
+                    raise e
         
         except DynamoDBKeyNotFoundError:
             raise KeyError
