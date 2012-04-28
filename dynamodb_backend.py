@@ -17,11 +17,7 @@ MAX_BATCH_SIZE = 25 # Maximum number of items in a BatchWriteItemsRequest.
 # Get a feel for server-side latencies.
 sampler = benchmark_utils.BenchmarkTimer()
 
-# Backend driven by DynamoDB. We use one table called "data", which has the
-# following columns:
-#    key (string)
-#    refCount (number)
-#    value (string)
+# Backend driven by DynamoDB. We use one table called "data".
 class DynamoDBBackend:
     
     def __init__(self):

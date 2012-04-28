@@ -6,7 +6,9 @@ import unittest
 # Helper class that contains generic code for testing any backend.
 class BackendTest(unittest.TestCase):
     # Tests for a single backend.
-    def runSingleClient(self, backend):
+    # testDeletes - set to false if you don't want to require deletes to be
+    #               eagerly propagated.
+    def runSingleClient(self, backend, testDeletes=True):
         backend.nuke()
         
         # Create and garbage-collect one key.
@@ -14,7 +16,8 @@ class BackendTest(unittest.TestCase):
         backend.put("key1", "value1")
         self.assertEqual(backend.get("key1"), "value1")
         backend.decRefCount("key1")
-        self.assertRaises(KeyError, backend.get, "key1")
+        if testDeletes:
+            self.assertRaises(KeyError, backend.get, "key1")
         
         # Create and garbage-collect multiple keys.
         backend.put("Seth", "Pollen")
@@ -28,10 +31,12 @@ class BackendTest(unittest.TestCase):
         backend.decRefCount("Jim")
         backend.decRefCount("Igor")
         self.assertEqual(backend.get("Igor"), "Canadi")
-        self.assertRaises(KeyError, backend.get, "Jim")
-        self.assertRaises(KeyError, backend.get, "Seth")
+        if testDeletes:
+            self.assertRaises(KeyError, backend.get, "Jim")
+            self.assertRaises(KeyError, backend.get, "Seth")
         backend.decRefCount("Igor") # Now garbage-collect Igor.
-        self.assertRaises(KeyError, backend.get, "Igor")
+        if testDeletes:
+            self.assertRaises(KeyError, backend.get, "Igor")
         
         # Create some keys and then nuke them all.
         backend.put("Nikita", "Khruschev")
@@ -41,22 +46,11 @@ class BackendTest(unittest.TestCase):
         self.assertRaises(KeyError, backend.get, "Fidel")
         self.assertRaises(KeyError, backend.get, "John")
         self.assertRaises(KeyError, backend.get, "Nikita")
-        
-        # Test out nuking again, to make sure it still works.
-        # Also test it with a large number of keys.
-        backend.put("John", "Doe")
-        for i in range(0, 100):
-            backend.put(str(i), str(i))
-        self.assertEqual(backend.get("John"), "Doe")
-        backend.nuke()
-        self.assertRaises(KeyError, backend.get, "John")
-        for i in range(0, 100):
-            self.assertRaises(KeyError, backend.get, str(i))
     
     # Tests for consistency between two instances of a backend.
     # testDeletes - set to false if you don't want to require deletes to be
     #               eagerly propagated.
-    def runMultipleClients(self, a, b, testDeletes):
+    def runMultipleClients(self, a, b, testDeletes=True):
         self.createMessage(a, b, 1)
         if testDeletes:
             self.deleteMessage(a, b)
@@ -75,11 +69,14 @@ class BackendTest(unittest.TestCase):
         
     # Sends a key from one backend to another.
     def createMessage(self, b1, b2, i):
-        b1.put("message", str(i))
-        self.assertEqual(b2.get("message"), str(i))
+        key = "m" + str(i)
+        value = "v" + str(i)
+        b1.put(key, value)
+        self.assertEqual(b2.get(key), value)
         
     # Deletes a key from one backend to another.
-    def deleteMessage(self, b1, b2):
-        b1.decRefCount("message")
-        self.assertRaises(KeyError, b2.get, "message")
+    def deleteMessage(self, b1, b2, i):
+        key = "m" + str(i)
+        b1.decRefCount(key)
+        self.assertRaises(KeyError, b2.get, key)
         
