@@ -1,0 +1,3 @@
+[submodule "boto"]
+	path = boto
+	url = https://github.com/boto/boto.git
