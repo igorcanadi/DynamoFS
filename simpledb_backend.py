@@ -1,4 +1,3 @@
-from time import sleep
 import benchmark_utils
 from boto.sdb.connection import SDBConnection
 import aws_credentials
@@ -37,15 +36,14 @@ class SimpleDBBackend:
     def get(self, key):
         sampler.begin()
         try:
-            try:
-                # First try an eventually consistent read.
-                result = self.domain.get_attributes(key, consistent_read=False)
-                return result[VALUE]
-            except KeyError:
-                # The eventually consistent read failed. Try a strongly consistent
-                # read.
-                result = self.domain.get_attributes(key, consistent_read=True)
-                return result[VALUE]
+            # First try an eventually consistent read.
+            result = self.domain.get_attributes(key, consistent_read=False)
+            return result[VALUE]
+        except KeyError:
+            # The eventually consistent read failed. Try a strongly consistent
+            # read.
+            result = self.domain.get_attributes(key, consistent_read=True)
+            return result[VALUE]
         finally:
             sampler.end()
         
