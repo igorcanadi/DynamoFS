@@ -29,7 +29,11 @@ def write(fs, filename, fileSize, sampler, rand):
     while bytesLeft > 0:
         if rand: # Seek to a random place.
             f.seek(randPos(fileSize), file.SEEK_SET)
-        f.write_array(benchmark_utils.semirandomArray(CHUNK_SIZE))
+            
+        if f.stringOptimized:
+            f.write(benchmark_utils.semirandomString(CHUNK_SIZE))
+        else:
+            f.write_array(benchmark_utils.semirandomArray(CHUNK_SIZE))
         bytesLeft -= CHUNK_SIZE
         
     f.close()
@@ -52,7 +56,11 @@ def read(fs, filename, fileSize, sampler, rand):
     while bytesLeft > 0:
         if rand: # Seek to a random place.
             f.seek(randPos(fileSize), file.SEEK_SET)
-        f.read_array(CHUNK_SIZE)
+            
+        if f.stringOptimized:
+            f.read(CHUNK_SIZE)
+        else:
+            f.read_array(CHUNK_SIZE)
         bytesLeft -= CHUNK_SIZE
         
     f.close()
@@ -96,7 +104,7 @@ def ensureDelete(filename):
         pass
     
 # Runs all four benchmarks on BerkeleyDB.
-def runAllWithBerkeleyDB(depth, fileSize):
+def runBerkeleyDB(depth, fileSize):
     from berkeleydb_backend import BerkeleyDBBackend
     
     backingFile = 'benchmark/data/bench.db'
@@ -110,7 +118,7 @@ def runAllWithBerkeleyDB(depth, fileSize):
     return runAllWithFs(fs, depth, fileSize)
 
 # Runs all four benchmarks on a DictBackend.
-def runAllWithDict(depth, fileSize):
+def runDict(depth, fileSize):
     from dict_backend import DictBackend
     
     backingFile = 'benchmark/data/bench.db'
@@ -124,7 +132,7 @@ def runAllWithDict(depth, fileSize):
     return runAllWithFs(fs, depth, fileSize)
 
 # Runs all four benchmarks on BerkeleyDB.
-def runAllWithDynamoDB(depth, fileSize):
+def runDynamoDB(depth, fileSize):
     from dynamodb_backend import DynamoDBBackend
     
     fsRootFile =  'benchmark/data/fs_root.txt'
@@ -135,8 +143,20 @@ def runAllWithDynamoDB(depth, fileSize):
     
     return runAllWithFs(fs, depth, fileSize)
 
+# Runs all four benchmarks on BerkeleyDB.
+def runSimpleDB(depth, fileSize):
+    from simpledb_backend import SimpleDBBackend
+    
+    fsRootFile =  'benchmark/data/fs_root.txt'
+    ensureDelete(fsRootFile)
+    
+    backend = SimpleDBBackend()
+    fs = dynamo_fs.DynamoFS(backend, fsRootFile)
+    
+    return runAllWithFs(fs, depth, fileSize)
+
 # Runs all four benchmarks on a LocalFS.
-def runAllWithLocalFS(depth, fileSize):
+def runLocalFS(depth, fileSize):
     from local_fs import LocalFS
     
     root = 'benchmark/data/localfs'

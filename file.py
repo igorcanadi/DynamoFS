@@ -76,3 +76,7 @@ class File:
 
     def close(self):
         self.blob.commit()
+        
+    # This class is NOT optimized for reading and writing strings. It is faster
+    # to call read_array and write_array than read or write.
+    stringOptimized = False

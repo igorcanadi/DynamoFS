@@ -1,5 +1,6 @@
 import os
 from dynamo_fs import concatPath
+from array import array
 
 # DynamoFS look-alike that just forwards every call to the underlying
 # operating system.
@@ -48,7 +49,13 @@ class LocalFS:
 class LocalFile:
     def __init__(self, filename, mode):
         self.f = open(filename, mode)
+        
+    def write_array(self, data):
+        self.f.write("".join(map(chr, data)))
 
+    def read_array(self, max_len):
+        return map(ord, self.f.read(max_len))
+    
     def write(self, data):
         self.f.write(data)
 
@@ -61,3 +68,7 @@ class LocalFile:
     def close(self):
         self.f.close()
         del self.f
+
+    # This class is optimized for reading and writing strings.
+    stringOptimized = True
+    
