@@ -2,6 +2,7 @@ import sys
 import os
 import benchmark_utils
 from boto.dynamodb.layer1 import Layer1
+from boto.exception import DynamoDBResponseError
 import aws_credentials
 
 TABLE_NAME = "data"
@@ -122,33 +123,15 @@ class DynamoDBBackend:
             # Issue an UpdateItem request to decrement the refCount.
             self._addToRefCount(key, -1)
             
-            
-            
-            
-            # TODO left off boto conversion here.
-            
-            
-            
-            
-            
             # Atomically delete the item, if its reference count is zero.
-            expectation = HashMap()
-            
-            # Check refCount.
-            expectation.put(REF_COUNT, ExpectedAttributeValue()
-                            .withValue(AttributeValue().withN("0")))
-            
-            request = (DeleteItemRequest()
-                       .withTableName(TABLE_NAME)
-                       .withKey(key)
-                       .withExpected(expectation))
-            
-            try:
-                result = self.client.deleteItem(request)
+            expectation = {REF_COUNT:{'Value':{'N':0}}}
+        
+            try:    
+                result = self.client.delete_item(TABLE_NAME, key, expectation)
                 self.useCapacity(result)
-            except ConditionalCheckFailedException:
-                pass # Do nothing. This just means the refCount was positive.
-            
+            except DynamoDBResponseError:
+                pass # The conditional check for a zero refCount must have failed; this is OK.
+        
         finally:    
             sampler.end()
     
@@ -156,38 +139,32 @@ class DynamoDBBackend:
     def nuke(self):
         while True:
             # Issue a Scan request to learn the contents of the table.
-            request = (ScanRequest()
-                       .withTableName(TABLE_NAME)
-                       .withAttributesToGet(Collections.singleton(KEY)))
-            result = self.client.scan(request)
+            result = self.client.scan(TABLE_NAME, attributes_to_get=[KEY])
             self.useCapacity(result)
             
             # If there are no items in the table, return.
-            if result.getCount() == 0:
+            if result['Count'] == 0:
                 return # We have emptied the table.
             else:
-                itemsToDelete = result.getItems()
+                itemsToDelete = result['Items']
                 
                 # Delete the items, sending multiple BatchWriteRequests if the number
                 # of items exceeds the ceiling.
-                total = itemsToDelete.size()
+                total = len(itemsToDelete)
                 index = 0
                 while index < total:
                     # Build a list of delete requests for the records returned by the scan.
-                    writeRequests = ArrayList()
+                    writeRequests = []
                     batchSize = 0
                     while (index < total) and (batchSize < MAX_BATCH_SIZE):
-                        key = self._apiKey(itemsToDelete.get(index).get(KEY).getS())
-                        writeRequests.add(WriteRequest()
-                                          .withDeleteRequest(DeleteRequest()
-                                                             .withKey(key)))
+                        key = self._apiKey(itemsToDelete[index][KEY]['S'])
+                        writeRequests.append({'DeleteRequest':{'Key':key}})
                         index += 1
                         batchSize += 1
                     
                     # Issue a BatchWriteItems request to delete the scanned items.
-                    request = (BatchWriteItemRequest()
-                               .withRequestItems(Collections.singletonMap(TABLE_NAME, writeRequests)))
-                    result = self.client.batchWriteItem(request).getResponses().get(TABLE_NAME)
+                    result = self.client.batch_write_item({TABLE_NAME:writeRequests})
+                    result = result['Responses'][TABLE_NAME] # Access statistics for this table.
                     self.useCapacity(result)
                     
     def flush(self):
