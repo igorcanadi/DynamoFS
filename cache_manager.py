@@ -1,17 +1,18 @@
 import time
 import config
-import threading
+#import threading
 
 class CacheManager:
     def __init__(self, cache_size):
         self.cache_size = cache_size
         self.cache = {}
-        self.timer = threading.Timer(config.CACHE_MANAGER_RELAXING_FREQUENCY, 
-                self._relax_cache)
-        self.timer.start()
+#        self.timer = threading.Timer(config.CACHE_MANAGER_RELAXING_FREQUENCY,
+#                self._relax_cache)
+#        self.timer.start()
 
     def kill_timer(self):
-        self.timer.cancel()
+#        self.timer.cancel()
+        pass
 
     def _relax_cache(self):
         if len(self.cache) >= float(self.cache_size) * config.ELASTIC_CACHE_OVERHEAD:
@@ -28,12 +29,13 @@ class CacheManager:
                     else:
                         key = lat[1]._key[:5]
                     lat[1].evict()
-        self.timer = threading.Timer(config.CACHE_MANAGER_RELAXING_FREQUENCY, 
-                self._relax_cache)
-        self.timer.start()
+#        self.timer = threading.Timer(config.CACHE_MANAGER_RELAXING_FREQUENCY,
+#                self._relax_cache)
+#        self.timer.start()
 
     def add_to_cache(self, blob):
         self.cache[blob] = time.time()
+        self._relax_cache()
 
     def remove_from_cache(self, blob):
         if blob in self.cache:

@@ -2,6 +2,7 @@
 
 from dict_backend import *
 from berkeleydb_backend import *
+from local_fs import *
 from benchmark_utils import *
 from file import SEEK_END
 
@@ -28,10 +29,10 @@ def run(fs, size):
     return sampler
 
 if __name__ == '__main__':
-    #backend = BerkeleyDBBackend('berkeley_db.db')
-    backend = DictBackend('dict_backend.db')
+    backend = BerkeleyDBBackend('berkeley_db.db')
+#    backend = DictBackend('dict_backend.db')
 
     fs = emptyFs(backend, 'benchmark/data/fs_root.txt')
+#    fs = LocalFS('local_fs')
     s = run(fs, 50000000)
     print s.mean()
-

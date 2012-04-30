@@ -2,6 +2,7 @@ from array import array
 
 import cPickle
 import hashlib
+from file import PAGE_SIZE
 
 def dirties(fn):
     """
@@ -413,9 +414,14 @@ class BlockBlob(Blob):
         Batch write operation. Writes value to data starting at index. Overwrites
         existing data.
         """
-        if len(self.data) < index + len(value):
-            self.data.extend([0 for i in range(index + len(value) - len(self.data))])
-        self.data[index:(index + len(value))] = array("B", value)
+#        if len(self.data) < index + len(value):
+#            self.data.extend([0 for i in range(index + len(value) - len(self.data))])
+        lenself = len(self.data)
+        midindex = min(index + len(value), lenself)
+#        extender =
+        self.data[index:midindex] = array("B", value[:lenself - index])
+        self.data.extend(value[lenself - index:])
+#        self.data[index:(index + len(value))] = array("B", value)
 
     @validate
     def read(self, index, size):

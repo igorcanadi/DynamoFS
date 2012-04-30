@@ -1,4 +1,5 @@
 import os
+import shutil
 from dynamo_fs import concatPath
 from array import array
 
@@ -7,6 +8,7 @@ from array import array
 class LocalFS:
     # root is the local path to use for this object's root.
     def __init__(self, root):
+        shutil.rmtree(root)
         os.mkdir(root)
         self.root = root
         
