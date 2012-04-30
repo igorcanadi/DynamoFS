@@ -388,23 +388,24 @@ class BlockBlob(Blob):
     def __init__(self, key, cntl, cache_manager, parent, valid = False):
         super(BlockBlob, self).__init__(key, cntl, cache_manager, parent, valid)
         if self.valid:
-            self.data = array('B')
+            self.data = array('B', [0 for i in range(PAGE_SIZE)])
+            self._length = 0
 
     def _delete_data(self):
-        self.data = array('B')
+        self.data = array('B', [0 for i in range(PAGE_SIZE)])
+        self._length = 0
 
     @validate
     def __getitem__(self, index):
-        if len(self.data) - 1 < index:
+        if self._length - 1 < index:
             raise IndexError("index out of range")
         return self.data[index]
 
     @validate
     @dirties
     def __setitem__(self, index, value):
-        if len(self.data) - 1 < index:
-            # block list is too short; expand
-            self.data.extend([0 for i in range(index - len(self.data) + 1)])
+        if self._length - 1 < index:
+            self._length = index + 1
         self.data[index] = value
 
     @validate
@@ -416,19 +417,24 @@ class BlockBlob(Blob):
         """
 #        if len(self.data) < index + len(value):
 #            self.data.extend([0 for i in range(index + len(value) - len(self.data))])
-        lenself = len(self.data)
-        midindex = min(index + len(value), lenself)
-#        extender =
-        self.data[index:midindex] = array("B", value[:lenself - index])
-        self.data.extend(value[lenself - index:])
+#        lenself = len(self.data)
+#        midindex = min(index + len(value), lenself)
+##        extender =
+#        self.data[index:midindex] = array("B", value[:lenself - index])
+#        self.data.extend(value[lenself - index:])
 #        self.data[index:(index + len(value))] = array("B", value)
+#        for valueIndex in range(len(value)):
+#            self.data[index] = value[valueIndex]
+#            index += 1
+        self.data[index:] = array("B", value)
+        self._length = max(self._length, index + len(value))
 
     @validate
     def read(self, index, size):
         """
         Returns sub array [index, index+size)
         """
-        if len(self.data) - 1 < index + size - 1:
+        if self._length - 1 < index + size - 1:
             raise IndexError("index out of range")
         return self.data[index:index + size]
 
@@ -438,8 +444,8 @@ class BlockBlob(Blob):
         """
         Appends value to this block's data. Value must be an integer.
         """
-        # TODO: test against PAGE_SIZE
         self.data.append(value)
+        self._length += 1
 
     @validate
     @dirties
@@ -448,26 +454,28 @@ class BlockBlob(Blob):
         Appends each of a list of values to this block's data. The values must
         be integers.
         """
-        # TODO: test against PAGE_SIZE
         self.data.extend(values)
+        self._length += len(values)
 
     def _serialize_data(self):
-        return cPickle.dumps(self.data.tostring())
+        return cPickle.dumps(self.data[:self._length].tostring())
 
     def _deserialize_data(self, data):
         self.data = array("B")
         self.data.fromstring(cPickle.loads(data))
+        self._length = len(self.data)
+        self.data.extend([0 for i in range(PAGE_SIZE - len(self.data))])
 
     @validate
     def data_as_string(self):
         """
         Returns the data in this block as a string
         """
-        return "".join(map(chr, self.data))
+        return "".join(map(chr, self.data[:self._length]))
 
     @validate
     def size(self):
-        return len(self.data)
+        return self._length
 
     @property
     def children(self):
