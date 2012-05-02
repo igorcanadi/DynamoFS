@@ -73,28 +73,58 @@ def read(fs, filename, fileSize, sampler, rand):
 #   sequential read
 #   random read
 # Returns a dict containing the time readings from all four benchmarks.
-def runAllWithFile(fs, filename, fileSize):
+def runAllWithFile(idstring):
     sampler = benchmark_utils.BenchmarkTimer()
-    
-    write(fs, filename, fileSize, sampler, False)
-    write(fs, filename, fileSize, sampler, True)
-    read(fs, filename, fileSize, sampler, False)
-    read(fs, filename, fileSize, sampler, True)
-    
-    # Build a nice dict of results.
-    return {
-        'seqwrite': sampler.samples[0],
-        'randwrite': sampler.samples[1],
-        'seqread': sampler.samples[2],
-        'randread': sampler.samples[3]
-    }
+
+    def benchWriteSeq(fs, filename, fileSize):
+        return (
+            'seqwrite',
+            idstring,
+            fileSize,
+            write(fs, filename, fileSize, sampler, False).mean()
+        )
+    def benchWriteRand(fs, filename, fileSize):
+        return (
+            'randwrite',
+            idstring,
+            fileSize,
+            write(fs, filename, fileSize, sampler, True).mean()
+        )
+    def benchReadSeq(fs, filename, fileSize):
+        return (
+            'seqread',
+            idstring,
+            fileSize,
+            read(fs, filename, fileSize, sampler, False).mean()
+        )
+    def benchReadRand(fs, filename, fileSize):
+        return (
+            'randread',
+            idstring,
+            fileSize,
+            read(fs, filename, fileSize, sampler, True).mean()
+        )
+
+    yield benchWriteSeq
+    yield benchWriteRand
+    yield benchReadSeq
+    yield benchReadRand
 
 # Runs all four benchmarks on a file in a randomly generated directory.
-def runAllWithFs(fs, depth, fileSize):
+def runAllWithFs(fsClass, depth, fileSize, idstring, numTrials=10):
     # Create a random chain of directories to get the proper depth.
+    fs = fsClass()
     cwd = benchmark_utils.makeDepth(fs, '/', depth)
     filename = dynamo_fs.concatPath(cwd, 'the_file')
-    return runAllWithFile(fs, filename, fileSize)
+    fs.flush()
+    results = list()
+    for i in range(numTrials):
+        for bench in runAllWithFile(idstring):
+            fs = fsClass()
+            results.append(bench(fs, filename, fileSize))
+            fs.flush()
+    return results
+#    return runAllWithFile(fs, filename, fileSize)
 
 # Ensures that a given file does not exist.
 def ensureDelete(filename):
@@ -112,24 +142,26 @@ def runBerkeleyDB(depth, fileSize):
     ensureDelete(backingFile)
     ensureDelete(fsRootFile)
 
-    backend = BerkeleyDBBackend(backingFile)
-    fs = dynamo_fs.DynamoFS(backend, fsRootFile)
-    
-    return runAllWithFs(fs, depth, fileSize)
+    def fsClass():
+        backend = BerkeleyDBBackend(backingFile)
+        return dynamo_fs.DynamoFS(backend, fsRootFile)
+
+    return runAllWithFs(fsClass, depth, fileSize, "berkeleydb")
 
 # Runs all four benchmarks on a DictBackend.
-def runDict(depth, fileSize):
-    from dict_backend import DictBackend
-    
-    backingFile = 'benchmark/data/bench.db'
-    fsRootFile =  'benchmark/data/fs_root.txt'
-    ensureDelete(backingFile)
-    ensureDelete(fsRootFile)
-    
-    backend = DictBackend(backingFile)
-    fs = dynamo_fs.DynamoFS(backend, fsRootFile)
-    
-    return runAllWithFs(fs, depth, fileSize)
+#def runDict(depth, fileSize):
+#    from dict_backend import DictBackend
+#
+#    backingFile = 'benchmark/data/bench.db'
+#    fsRootFile =  'benchmark/data/fs_root.txt'
+#    ensureDelete(backingFile)
+#    ensureDelete(fsRootFile)
+#
+#    def fsClass():
+#        backend = DictBackend(backingFile)
+#        return dynamo_fs.DynamoFS(backend, fsRootFile)
+#
+#    return runAllWithFs(fsClass, depth, fileSize, "dict")
 
 # Runs all four benchmarks on BerkeleyDB.
 def runDynamoDB(depth, fileSize):
@@ -137,11 +169,12 @@ def runDynamoDB(depth, fileSize):
     
     fsRootFile =  'benchmark/data/fs_root.txt'
     ensureDelete(fsRootFile)
+
+    def fsClass():
+        backend = DynamoDBBackend()
+        return dynamo_fs.DynamoFS(backend, fsRootFile)
     
-    backend = DynamoDBBackend()
-    fs = dynamo_fs.DynamoFS(backend, fsRootFile)
-    
-    return runAllWithFs(fs, depth, fileSize)
+    return runAllWithFs(fsClass, depth, fileSize, "dynamoDB")
 
 # Runs all four benchmarks on BerkeleyDB.
 def runSimpleDB(depth, fileSize):
@@ -176,6 +209,8 @@ def runLocalFS(depth, fileSize):
         shutil.rmtree(root) # Nuke the local fs.
     except:
         pass
-    fs = LocalFS(root)
-    
-    return runAllWithFs(fs, depth, fileSize)
+
+    def fsClass():
+        return LocalFS(root)
+
+    return runAllWithFs(fsClass, depth, fileSize, "localfs")

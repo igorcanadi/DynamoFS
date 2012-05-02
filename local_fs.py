@@ -8,8 +8,11 @@ from array import array
 class LocalFS:
     # root is the local path to use for this object's root.
     def __init__(self, root):
-        shutil.rmtree(root)
-        os.mkdir(root)
+#        shutil.rmtree(root)
+        try:
+            os.mkdir(root)
+        except OSError, e:
+            pass
         self.root = root
         
     def _fromRoot(self, path):
@@ -46,6 +49,9 @@ class LocalFS:
         
     def flush(self):
         pass # No-op.
+
+    def __str__(self):
+        return "LocalFS"
     
 # Object returned by LocalFS.open().
 class LocalFile:
