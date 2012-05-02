@@ -80,3 +80,10 @@ def semirandomString(length, rangeMin = 32, rangeMax = 126):
 
 def semirandomArray(length, rangeMin = 32, rangeMax = 126):
     return array('b', [random.randint(rangeMin, rangeMax)] * length)
+
+# Takes in a list of tuples (or a list of lists) and prints it out to stdout
+# in a CSV format.
+def printCsv(data):
+    for line in data:
+        print ','.join(map(str, line))
+            
