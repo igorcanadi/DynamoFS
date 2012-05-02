@@ -148,22 +148,7 @@ def runBerkeleyDB(depth, fileSize):
 
     return runAllWithFs(fsClass, depth, fileSize, "berkeleydb")
 
-# Runs all four benchmarks on a DictBackend.
-#def runDict(depth, fileSize):
-#    from dict_backend import DictBackend
-#
-#    backingFile = 'benchmark/data/bench.db'
-#    fsRootFile =  'benchmark/data/fs_root.txt'
-#    ensureDelete(backingFile)
-#    ensureDelete(fsRootFile)
-#
-#    def fsClass():
-#        backend = DictBackend(backingFile)
-#        return dynamo_fs.DynamoFS(backend, fsRootFile)
-#
-#    return runAllWithFs(fsClass, depth, fileSize, "dict")
-
-# Runs all four benchmarks on BerkeleyDB.
+# Runs all four benchmarks on DynamoDB.
 def runDynamoDB(depth, fileSize):
     from dynamodb_backend import DynamoDBBackend
     
@@ -176,7 +161,7 @@ def runDynamoDB(depth, fileSize):
     
     return runAllWithFs(fsClass, depth, fileSize, "dynamodb")
 
-# Runs all four benchmarks on BerkeleyDB.
+# Runs all four benchmarks on SimpleDB.
 def runSimpleDB(depth, fileSize):
     from simpledb_backend import SimpleDBBackend
     
@@ -189,7 +174,7 @@ def runSimpleDB(depth, fileSize):
     
     return runAllWithFs(fsClass, depth, fileSize, "simpledb")
 
-# Runs all four benchmarks on BerkeleyDB.
+# Runs all four benchmarks on S3.
 def runS3(depth, fileSize):
     from s3_backend import S3Backend
     
