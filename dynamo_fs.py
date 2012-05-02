@@ -67,6 +67,8 @@ class DynamoFS:
                 raise Exception('File not found')
             else:
                 self._create_file(parent, leaf_name)
+        if not isinstance(parent[leaf_name], blob.BlockListBlob):
+            raise Exception('Not a file')
         return file.File(parent[leaf_name], mode)
 
     def isdir(self, path):
@@ -106,6 +108,34 @@ class DynamoFS:
         target = self._find_leaf(path)
         target[filename] = blob.DirectoryBlob(key, self.cntl, 
                 target, False)
+
+    # merge blob_merging to blob_target living at filename
+    def _merge_with_blob(self, filename, blob_target, blob_merging):
+        if blob_target.key == blob_merging.key:
+            # we're good
+            return
+        print filename
+        assert not isinstance(blob_target, blob.BlockBlob)
+        if isinstance(blob_target, blob.BlockListBlob):
+            # overwrite
+            blob_target.parent[filename] = blob_merging
+            return
+        for child in blob_merging.keys():
+            if child not in blob_target.keys():
+                # not conflicting, add
+                blob_target[child] = blob_merging[child]
+            else:
+                # conflicting, merge recursively
+                self._merge_with_blob(child, blob_target[child], blob_merging[child])
+
+    # this will merge path with the tree denoted by the key
+    # conflicting folders will be merged recursively
+    # conflicting files will be changed to the shared version
+    # non-conflicting files or folders will be added to the tree
+    def merge_with_shared_key(self, path, key):
+        target = self._find_leaf(path)
+        tmp_blob = blob.DirectoryBlob(key, self.cntl, target.parent, False)
+        self._merge_with_blob(_get_leaf_filename(path), target, tmp_blob)
 
     def _output_whole_tree(self, node, level):
         if isinstance(node, blob.DirectoryBlob):

@@ -173,6 +173,88 @@ class FlushTestCase(BasicTest):
         f1.close()
         f2.close()
 
+class MergingTestCase(BasicTest):
+    # /movies
+    #     /batman
+    #          /bill
+    #             note -> 'foo'
+    #          /rose
+    #     /spiderman
+    #         /star_wars
+    #              lyrics -> 'la la la'
+    # /movies_to_be_merged
+    #     /batman
+    #         /bill
+    #             note -> 'old_foo'
+    #             /bong
+    #               note -> 'yeah'
+    #         /bruce
+    #            talk -> 'tt'
+    #     /spiderman
+    #         /star_wars
+    #             /lyrics
+    #                lyrics -> 'la la'
+    #    /harry_potter
+    #          /chamber
+
+    def create_tree(self, path, structure):
+        if isinstance(structure, dict):
+            for f in structure:
+                if isinstance(structure[f], dict):
+                    self.dfs.mkdir(path, f)
+                self.create_tree(path + '/' + f, structure[f])
+        elif isinstance(structure, str):
+            f = self.dfs.open(path, 'w')
+            f.write(structure)
+            f.close()
+
+    def check_structure(self, blob, structure):
+        if isinstance(structure, dict):
+            for f in structure:
+                self.check_structure(blob[f], structure[f])
+            for c in blob.keys():
+                self.assertTrue(c in structure)
+        elif isinstance(structure, str):
+            f = file.File(blob, 'r')
+            self.assertEqual(f.read(10000), structure)
+
+    def runTest(self):
+        super(MergingTestCase, self).runTest()
+        self.create_tree('/', \
+            {
+                'movies': {
+                    'batman': {'bill': {'note': 'foo'}, 'rose': {}},
+                    'spiderman': {'star_wars': {'lyrics': 'la la la'}}
+                },
+                'movies_to_be_merged': {
+                    'batman': {
+                        'bill': {'bong': {'note': 'yeah'}, 'note': 'old_foo'},
+                        'bruce': {'talk': 'tt'}
+                    },
+                    'spiderman': {
+                        'star_wars': {'lyrics': {'lyrics': 'la la'}}
+                    },
+                    'harry_potter': {
+                        'chamber': {}
+                    }
+                }
+            }
+        )
+        k = self.dfs.get_key_for_sharing('/movies_to_be_merged')
+        self.dfs.merge_with_shared_key('/movies', k)
+        self.check_structure(self.dfs.root['movies'], \
+            {
+                'batman': {
+                    'bruce': {'talk': 'tt'},
+                    'bill': {'note': 'old_foo', 'bong': {'note': 'yeah'}},
+                    'rose': {}
+                },
+                'spiderman': {'star_wars': {'lyrics': {'lyrics': 'la la'}}},
+                'harry_potter': { 'chamber': {} }
+            }
+        )
+
+
 class SimpleSeekTestCase(BasicTest):
     def runTest(self):
         super(SimpleSeekTestCase, self).runTest()
