@@ -296,7 +296,7 @@ class DirectoryBlob(Blob):
 
     def _deserialize_data(self, data):
         self.items = dict()
-        for filename, (itemclass, item) in cPickle.loads(data).items():
+        for filename, (itemclass, item) in cPickle.loads(str(data)).items():
             self.items[filename] = itemclass(item, self.cntl, self)
 
 class BlockListBlob(Blob):
@@ -359,7 +359,7 @@ class BlockListBlob(Blob):
         block list with invalid BlockBlob objects.
         """
         self.blocks = list()
-        for key in cPickle.loads(data):
+        for key in cPickle.loads(str(data)):
             self.blocks.append(BlockBlob(key, self.cntl, self))
 
     @property
@@ -407,14 +407,14 @@ class BlockBlob(Blob):
         Batch write operation. Writes value to data starting at index. Overwrites
         existing data.
         """
-#        if len(self.data) < index + len(value):
-#            self.data.extend([0 for i in range(index + len(value) - len(self.data))])
-        lenself = len(self.data)
-        midindex = min(index + len(value), lenself)
+        if len(self.data) < index + len(value):
+            self.data.extend([0 for i in range(index + len(value) - len(self.data))])
+#        lenself = len(self.data)
+#        midindex = min(index + len(value), lenself)
 #        extender =
-        self.data[index:midindex] = array("B", value[:lenself - index])
-        self.data.extend(value[lenself - index:])
-#        self.data[index:(index + len(value))] = array("B", value)
+#        self.data[index:midindex] = array("B", value[:lenself - index])
+#        self.data.extend(value[lenself - index:])
+        self.data[index:(index + len(value))] = array("B", value)
 
     @validate
     def read(self, index, size):
@@ -449,7 +449,7 @@ class BlockBlob(Blob):
 
     def _deserialize_data(self, data):
         self.data = array("B")
-        self.data.fromstring(cPickle.loads(data))
+        self.data.fromstring(cPickle.loads(str(data)))
 
     @validate
     def data_as_string(self):

@@ -125,5 +125,6 @@ class DynamoFS:
     def flush(self):
         # Flush the caches, starting at the top and working down to the
         # lowest level.
+        self.root.evict()
         self.cntl.flush()
         self.cntl.server.flush()

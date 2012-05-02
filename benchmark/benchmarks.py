@@ -7,7 +7,6 @@ import benchmark_utils
 import dynamo_fs
 import os
 import file
-from dynamo_fs import concatPath
 import shutil
 
 # General Note: fileSizes will be rounded up to the nearest multiple of
@@ -25,23 +24,23 @@ def randPos(fileSize):
 def write(fs, filename, fileSize, sampler, rand):
     sampler.begin()
     f = fs.open(filename, 'w')
-    
+
     bytesLeft = fileSize
     while bytesLeft > 0:
         if rand: # Seek to a random place.
             f.seek(randPos(fileSize), file.SEEK_SET)
-            
+
         if f.stringOptimized:
             f.write(benchmark_utils.semirandomString(CHUNK_SIZE))
         else:
             f.write_array(benchmark_utils.semirandomArray(CHUNK_SIZE))
         bytesLeft -= CHUNK_SIZE
-        
+
     f.close()
-    
+
     # Flush the filesystem caches before finishing the timer.
     fs.flush()
-    
+
     sampler.end()
     return sampler
 
@@ -49,64 +48,24 @@ def write(fs, filename, fileSize, sampler, rand):
 def read(fs, filename, fileSize, sampler, rand):
     # Make sure to start with an empty filesystem cache.
     fs.flush()
-    
+
     sampler.begin()
     f = fs.open(filename, 'r')
-    
+
     bytesLeft = fileSize
     while bytesLeft > 0:
         if rand: # Seek to a random place.
             f.seek(randPos(fileSize), file.SEEK_SET)
-            
+
         if f.stringOptimized:
             f.read(CHUNK_SIZE)
         else:
             f.read_array(CHUNK_SIZE)
         bytesLeft -= CHUNK_SIZE
-        
+
     f.close()
     sampler.end()
     return sampler
-
-# Populates a filesystem with a tree of randomly generated files. All the contents
-# of a directory (files or directories) are named using integer values, starting at
-# 0.
-def makeRandomTree(fs, root, depth, fanout, fileSize):
-    if depth > 0:
-        for i in range(0, fanout):
-            iStr = str(i)
-            fs.mkdir(root, iStr)
-            makeRandomTree(fs, concatPath(root, iStr), depth - 1, fanout, fileSize)
-    else: # depth is zero; now we make files.
-        for i in range(0, fanout):
-            f = fs.open(concatPath(root, str(i)), 'w')
-            
-            bytesLeft = fileSize
-            while bytesLeft > 0:
-                if f.stringOptimized:
-                    f.write(benchmark_utils.semirandomString(CHUNK_SIZE))
-                else:
-                    f.write_array(benchmark_utils.semirandomArray(CHUNK_SIZE))
-                bytesLeft -= CHUNK_SIZE
-                
-            f.close()
-            
-# Randomly mutates files in a tree created by makeRandomTree.
-def mutateRandomTree(fs, root, depth, fanout, fileSize, numMutations):
-    for _ in range(0, numMutations):
-        # Create a random path.
-        path = root
-        for _ in range(0, depth + 1): # Add 1 to create the filename at the end of the directory string.
-            path = concatPath(path, str(randint(0, fanout - 1)))
-        
-        # Write a chunk to the file.
-        f = fs.open(path, 'w')
-        if f.stringOptimized:
-            f.write(benchmark_utils.semirandomString(CHUNK_SIZE))
-        else:
-            f.write_array(benchmark_utils.semirandomArray(CHUNK_SIZE))
-            
-        f.close()
 
 # Performs all four benchmarks in the following order:
 #   sequential write
@@ -215,7 +174,7 @@ def runDynamoDB(depth, fileSize):
         backend = DynamoDBBackend()
         return dynamo_fs.DynamoFS(backend, fsRootFile)
     
-    return runAllWithFs(fsClass, depth, fileSize, "dynamoDB")
+    return runAllWithFs(fsClass, depth, fileSize, "dynamodb")
 
 # Runs all four benchmarks on BerkeleyDB.
 def runSimpleDB(depth, fileSize):
@@ -223,11 +182,12 @@ def runSimpleDB(depth, fileSize):
     
     fsRootFile =  'benchmark/data/fs_root.txt'
     ensureDelete(fsRootFile)
+
+    def fsClass():
+        backend = SimpleDBBackend()
+        return dynamo_fs.DynamoFS(backend, fsRootFile)
     
-    backend = SimpleDBBackend()
-    fs = dynamo_fs.DynamoFS(backend, fsRootFile)
-    
-    return runAllWithFs(fs, depth, fileSize)
+    return runAllWithFs(fsClass, depth, fileSize, "simpledb")
 
 # Runs all four benchmarks on BerkeleyDB.
 def runS3(depth, fileSize):
@@ -235,11 +195,12 @@ def runS3(depth, fileSize):
     
     fsRootFile =  'benchmark/data/fs_root.txt'
     ensureDelete(fsRootFile)
+
+    def fsClass():
+        backend = S3Backend()
+        return dynamo_fs.DynamoFS(backend, fsRootFile)
     
-    backend = S3Backend()
-    fs = dynamo_fs.DynamoFS(backend, fsRootFile)
-    
-    return runAllWithFs(fs, depth, fileSize)
+    return runAllWithFs(fsClass, depth, fileSize, "s3")
 
 # Runs all four benchmarks on a LocalFS.
 def runLocalFS(depth, fileSize):
