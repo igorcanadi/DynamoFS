@@ -11,8 +11,6 @@ def dirties(fn):
     """
     def wrapped(self, *args, **kwargs):
         self._assert_valid_state()
-        # I have been accessed, don't evict me from cache!
-        self.cache_manager.add_to_cache(self)
         if self.clean:
             self.dirty = True
             self._key = None
@@ -28,8 +26,6 @@ def validate(fn):
     def wrapped(self, *args, **kwargs):
         self._assert_valid_state()
         if self.invalid:
-            # I have been accessed, don't evict me from cache!
-            self.cache_manager.add_to_cache(self)
             self._blob = self.cntl.getdata(self._key)
             self._deserialize_data(self._blob)
             self.dirty = False
@@ -39,7 +35,7 @@ def validate(fn):
     return wrapped
 
 class Blob(object):
-    def __init__(self, key, cntl, cache_manager, parent, valid = False):
+    def __init__(self, key, cntl, parent, valid = False):
         """
         key: the key of the data that this blob represents.
         cntl: the controller object this blob should use to access the backing store.
@@ -53,7 +49,6 @@ class Blob(object):
         self.valid = valid
         self.dirty = valid
         self.cntl = cntl
-        self.cache_manager = cache_manager
         self._assert_valid_state()
 
     def my_name(self):
@@ -89,7 +84,6 @@ class Blob(object):
         self.valid = False
         self._delete_data()
         self._blob = None
-        self.cache_manager.remove_from_cache(self)
         self._assert_valid_state()
 
     def commit(self):
@@ -225,10 +219,10 @@ class Blob(object):
 class DirectoryBlob(Blob):
     """
     Represents a directory. Can be used like a dict. Example usage:
-    >>> dirblob = DirectoryBlob(None, cntl, cache_manager, None, True)
-    >>> dirblob['usr'] = DirectoryBlob(None, cntl, cache_manager, dirblob, True)
-    >>> dirblob['usr']['bin'] = DirectoryBlob(None, cntl, cache_manager, dirblob['usr'], True)
-    >>> dirblob['usr']['bin']['README'] = BlockListBlob(none, cntl, cache_manager, dirblob['usr']['bin'], True)
+    >>> dirblob = DirectoryBlob(None, cntl, None, True)
+    >>> dirblob['usr'] = DirectoryBlob(None, cntl, dirblob, True)
+    >>> dirblob['usr']['bin'] = DirectoryBlob(None, cntl, dirblob['usr'], True)
+    >>> dirblob['usr']['bin']['README'] = BlockListBlob(none, cntl, dirblob['usr']['bin'], True)
     The file system now looks like this:
     usr
         bin
@@ -241,8 +235,8 @@ class DirectoryBlob(Blob):
     To flush everything, including the children, do:
     >>> dirblob.recursiveFlush()
     """
-    def __init__(self, key, cntl, cache_manager, parent = None, valid = False):
-        super(DirectoryBlob, self).__init__(key, cntl, cache_manager, parent, valid)
+    def __init__(self, key, cntl, parent = None, valid = False):
+        super(DirectoryBlob, self).__init__(key, cntl, parent, valid)
         if valid:
             self.items = dict()
 
@@ -303,8 +297,7 @@ class DirectoryBlob(Blob):
     def _deserialize_data(self, data):
         self.items = dict()
         for filename, (itemclass, item) in cPickle.loads(data).items():
-            self.items[filename] = itemclass(item, self.cntl, 
-                    self.cache_manager, self)
+            self.items[filename] = itemclass(item, self.cntl, self)
 
 class BlockListBlob(Blob):
     """
@@ -318,8 +311,8 @@ class BlockListBlob(Blob):
     Hello, world!
     Each element in this object is a BlockBlob.
     """
-    def __init__(self, key, cntl, cache_manager, parent, valid = False):
-        super(BlockListBlob, self).__init__(key, cntl, cache_manager, parent, valid)
+    def __init__(self, key, cntl, parent, valid = False):
+        super(BlockListBlob, self).__init__(key, cntl, parent, valid)
         if valid:
             self.blocks = list()
 
@@ -335,7 +328,7 @@ class BlockListBlob(Blob):
             # block list is too short; expand
             self.dirty = True
             self.blocks.extend([
-                BlockBlob(None, self.cntl, self.cache_manager, self, True)
+                BlockBlob(None, self.cntl, self, True)
                     for i in range(item - len(self.blocks) + 1)
             ])
         return self.blocks[item]
@@ -367,7 +360,7 @@ class BlockListBlob(Blob):
         """
         self.blocks = list()
         for key in cPickle.loads(data):
-            self.blocks.append(BlockBlob(key, self.cntl, self.cache_manager, self))
+            self.blocks.append(BlockBlob(key, self.cntl, self))
 
     @property
     @validate
@@ -378,15 +371,15 @@ class BlockBlob(Blob):
     """
     Represents a block of data. Can be treated like an array. The underlying representation
     used is array.array. Example usage:
-    >>> block = BlockBlob(None, cntl, cache_manager, parent, True)
+    >>> block = BlockBlob(None, cntl, parent, True)
     >>> print block.data_as_string()
 
     >>> block.extend(array("B", "Good bye."))
     >>> print block.data_as_string()
     Good bye.
     """
-    def __init__(self, key, cntl, cache_manager, parent, valid = False):
-        super(BlockBlob, self).__init__(key, cntl, cache_manager, parent, valid)
+    def __init__(self, key, cntl, parent, valid = False):
+        super(BlockBlob, self).__init__(key, cntl, parent, valid)
         if self.valid:
             self.data = array('B')
 

@@ -1,6 +1,5 @@
 import blob
 import controller
-import cache_manager
 import file
 import config
 
@@ -24,8 +23,6 @@ class DynamoFS:
     def __init__(self, server, root_filename):
         self.cntl = controller.Controller(server, root_filename, 
                 config.CONTROLLER_CACHE_SIZE)
-        self.cache_manager = cache_manager.CacheManager(
-                config.CACHE_MANAGER_CACHE_SIZE)
         root_hash = self.cntl.get_root_hash()
         try:
             server.get(root_hash)
@@ -37,11 +34,10 @@ class DynamoFS:
         # if root_hash == None, it means we don't have a root, 
         # so this just generates it
         self.root = blob.DirectoryBlob(root_hash, self.cntl, 
-                self.cache_manager, None, root_hash == None)
+                None, root_hash == None)
 
     def cleanup(self):
         self.root.commit()
-        self.cache_manager.kill_timer()
 
     def __del__(self):
         self.cleanup()
@@ -59,7 +55,7 @@ class DynamoFS:
 
     def _create_file(self, parent, filename):
         parent[filename] = blob.BlockListBlob(None, self.cntl, 
-                self.cache_manager, parent, True)
+                parent, True)
 
     # mode can be 'r' or 'w'
     def open(self, filename, mode):
@@ -86,7 +82,7 @@ class DynamoFS:
         # look up parent
         parent = self._find_leaf(path)
         parent[new_dir] = blob.DirectoryBlob(None, self.cntl, 
-                self.cache_manager, parent, True)
+                parent, True)
 
     def ls(self, path):
         return self._find_leaf(path).keys()
@@ -109,7 +105,7 @@ class DynamoFS:
     def attach_shared_key(self, path, filename, key):
         target = self._find_leaf(path)
         target[filename] = blob.DirectoryBlob(key, self.cntl, 
-                self.cache_manager, target, False)
+                target, False)
 
     def _output_whole_tree(self, node, level):
         if isinstance(node, blob.DirectoryBlob):
@@ -129,6 +125,5 @@ class DynamoFS:
     def flush(self):
         # Flush the caches, starting at the top and working down to the
         # lowest level.
-        self.cache_manager.flush()
         self.cntl.flush()
         self.cntl.server.flush()
