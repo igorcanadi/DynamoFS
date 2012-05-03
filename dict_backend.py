@@ -66,5 +66,5 @@ class DictBackend:
         self.kvstore = dict()
 
     def flush(self):
-        pass # No-op.
+        self.cleanup()
     

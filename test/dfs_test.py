@@ -8,6 +8,27 @@ class BasicTest(unittest.TestCase):
     serverBackupFilename = 'test/data/server_stub_backup.dat'
     rootFilename = 'test/data/fs_root.txt'
 
+    def create_tree(self, path, structure):
+        if isinstance(structure, dict):
+            for f in structure:
+                if isinstance(structure[f], dict):
+                    self.dfs.mkdir(path, f)
+                self.create_tree(path + '/' + f, structure[f])
+        elif isinstance(structure, str):
+            f = self.dfs.open(path, 'w')
+            f.write(structure)
+            f.close()
+
+    def check_structure(self, blob, structure):
+        if isinstance(structure, dict):
+            for f in structure:
+                self.check_structure(blob[f], structure[f])
+            for c in blob.keys():
+                self.assertTrue(c in structure)
+        elif isinstance(structure, str):
+            f = file.File(blob, 'r')
+            self.assertEqual(f.read(10000), structure)
+
     def setUp(self):
         # we don't test persistence in these tests
         # start with clean plate
@@ -33,10 +54,7 @@ class BasicTest(unittest.TestCase):
 class MkdirLsTestCase(BasicTest):
     def runTest(self):
         super(MkdirLsTestCase, self).runTest()
-        self.dfs.mkdir('/', 'test_dir')
-        self.dfs.mkdir('/', 'works')
-        self.dfs.mkdir('/test_dir', 'win')
-        self.dfs.mkdir('/test_dir/win', 'lose')
+        self.create_tree('/', {'test_dir': {'win': {'lose': {}} }, 'works': {}})
         self.assertEqual(self.dfs.ls('/'), ['test_dir', 'works'])
         self.assertEqual(self.dfs.ls('/'), ['test_dir', 'works'])
         self.assertEqual(self.dfs.ls('/test_dir'), ['win'])
@@ -73,55 +91,60 @@ class OpenReadTestCase(OpenWriteTestCase):
 class RmTestCase(BasicTest):
     def runTest(self):
         super(RmTestCase, self).runTest()
-        self.dfs.mkdir('/', 'a')
-        self.dfs.mkdir('/a', 'test_dir')
-        self.dfs.mkdir('/a', 'works')
-        self.assertEqual(self.dfs.ls('/a'), ['test_dir', 'works'])
+        self.create_tree('/', {'a': {'test_dir': {}, 'works': {}}})
+        self.check_structure(self.dfs.root, {'a': {'test_dir': {}, 'works': {}}})
         self.dfs.rm('/a/test_dir')
-        self.assertEqual(self.dfs.ls('/a'), ['works'])
+        self.check_structure(self.dfs.root, {'a': {'works': {}}})
 
 class MvTestCase(BasicTest):
     def runTest(self):
         super(MvTestCase, self).runTest()
-        self.dfs.mkdir('/', 'a')
-        self.dfs.mkdir('/', 'b')
-        self.dfs.mkdir('/a', 'test_dir')
-        self.dfs.mkdir('/a', 'works')
-        self.assertEqual(self.dfs.ls('/a'), ['test_dir', 'works'])
+        self.create_tree('/', {'a': {'test_dir': {}, 'works': {}}, 'b': {}})
+        self.check_structure(self.dfs.root, {'a': {'test_dir': {}, 'works': {}}, 'b': {}})
         self.dfs.mv('/a/test_dir', '/a/pas')
-        self.assertEqual(self.dfs.ls('/a'), ['works', 'pas'])
+        self.check_structure(self.dfs.root, {'a': {'pas': {}, 'works': {}}, 'b': {}})
         self.dfs.mv('/a/pas', '/b/macka')
-        self.assertEqual(self.dfs.ls('/b'), ['macka'])
-        self.assertEqual(self.dfs.ls('/a'), ['works'])
+        self.check_structure(self.dfs.root, {'a': {'works': {}}, 'b': {'macka': {}}})
 
 class SharingTestCase(BasicTest):
     def runTest(self):
         super(SharingTestCase, self).runTest()
-        self.dfs.mkdir('/', 'movies')
-        self.dfs.mkdir('/movies', 'romantic_comedies')
-        f = self.dfs.open('/movies/to_watch', 'w')
-        f.write('harry potter; star wars')
-        f.close()
+        self.create_tree('/', 
+                {'movies': {
+                    'romantic_comedies': {}, 
+                    'to_watch': 'harry potter; star wars'
+                    }
+                }
+        )
         k = self.dfs.get_key_for_sharing('/movies')
         self.dfs.attach_shared_key('/movies/', 'shared_movies', k)
-        self.assertEqual(sorted(self.dfs.ls('/movies')), 
-                sorted(['romantic_comedies', 'to_watch', 'shared_movies']))
-        self.assertEqual(sorted(self.dfs.ls('/movies/shared_movies')), 
-                sorted(['romantic_comedies', 'to_watch']))
-        f1 = self.dfs.open('/movies/to_watch', 'r')
-        f2 = self.dfs.open('/movies/shared_movies/to_watch', 'r')
-        self.assertEqual(f1.read(100), f2.read(100))
-        f1.close()
-        f2.close()
+
+        self.check_structure(self.dfs.root,
+                {'movies': {
+                    'romantic_comedies': {}, 
+                    'to_watch': 'harry potter; star wars',
+                    'shared_movies': {
+                        'romantic_comedies': {}, 
+                        'to_watch': 'harry potter; star wars'
+                        }
+                    }
+                }
+        )
+
         f2 = self.dfs.open('/movies/to_watch', 'w')
         f2.write('harry potter (DONE); star wars')
         f2.close()
-        f1 = self.dfs.open('/movies/to_watch', 'r')
-        f2 = self.dfs.open('/movies/shared_movies/to_watch', 'r')
-        f1.close()
-        f2.close()
-        self.assertEqual(f1.read(100), 'harry potter (DONE); star wars')
-        self.assertEqual(f2.read(100), 'harry potter; star wars')
+        self.check_structure(self.dfs.root,
+                {'movies': {
+                    'romantic_comedies': {}, 
+                    'to_watch': 'harry potter (DONE); star wars',
+                    'shared_movies': {
+                        'romantic_comedies': {}, 
+                        'to_watch': 'harry potter; star wars'
+                        }
+                    }
+                }
+        )
         
 class FlushTestCase(BasicTest):
     def runTest(self):
@@ -130,11 +153,13 @@ class FlushTestCase(BasicTest):
         # Based on SharingTestCase, just with a bunch of flush() calls in
         # important places.
         
-        self.dfs.mkdir('/', 'movies')
-        self.dfs.mkdir('/movies', 'romantic_comedies')
-        f = self.dfs.open('/movies/to_watch', 'w')
-        f.write('harry potter; star wars')
-        f.close()
+        self.create_tree('/', 
+                {'movies': {
+                    'romantic_comedies': {}, 
+                    'to_watch': 'harry potter; star wars'
+                    }
+                }
+        )
         
         self.dfs.flush()
         
@@ -146,16 +171,17 @@ class FlushTestCase(BasicTest):
         
         self.dfs.flush()
         
-        self.assertEqual(sorted(self.dfs.ls('/movies')), 
-                sorted(['romantic_comedies', 'to_watch', 'shared_movies']))
-        self.assertEqual(sorted(self.dfs.ls('/movies/shared_movies')), 
-                sorted(['romantic_comedies', 'to_watch']))
-        
-        f1 = self.dfs.open('/movies/to_watch', 'r')
-        f2 = self.dfs.open('/movies/shared_movies/to_watch', 'r')
-        self.assertEqual(f1.read(100), f2.read(100))
-        f1.close()
-        f2.close()
+        self.check_structure(self.dfs.root,
+                {'movies': {
+                    'romantic_comedies': {}, 
+                    'to_watch': 'harry potter; star wars',
+                    'shared_movies': {
+                        'romantic_comedies': {}, 
+                        'to_watch': 'harry potter; star wars'
+                        }
+                    }
+                }
+        )
         
         f2 = self.dfs.open('/movies/to_watch', 'w')
         f2.write('harry potter (DONE); star wars')
@@ -196,27 +222,6 @@ class MergingTestCase(BasicTest):
     #                lyrics -> 'la la'
     #    /harry_potter
     #          /chamber
-
-    def create_tree(self, path, structure):
-        if isinstance(structure, dict):
-            for f in structure:
-                if isinstance(structure[f], dict):
-                    self.dfs.mkdir(path, f)
-                self.create_tree(path + '/' + f, structure[f])
-        elif isinstance(structure, str):
-            f = self.dfs.open(path, 'w')
-            f.write(structure)
-            f.close()
-
-    def check_structure(self, blob, structure):
-        if isinstance(structure, dict):
-            for f in structure:
-                self.check_structure(blob[f], structure[f])
-            for c in blob.keys():
-                self.assertTrue(c in structure)
-        elif isinstance(structure, str):
-            f = file.File(blob, 'r')
-            self.assertEqual(f.read(10000), structure)
 
     def runTest(self):
         super(MergingTestCase, self).runTest()
@@ -291,6 +296,56 @@ class BigSeekTestCase(BasicTest):
         self.assertEqual(somefile.read(2), 'bb')
         somefile.seek(-4500, file.SEEK_END)
         self.assertEqual(somefile.read(2), 'aa')
+
+class PersistenceTestCase(BasicTest):
+    def runTest(self):
+        super(PersistenceTestCase, self).runTest()
+        self.create_tree('/', \
+            {
+                'movies': {
+                    'batman': {'bill': {'note': 'foo'}, 'rose': {}},
+                    'spiderman': {'star_wars': {'lyrics': 'la la la'}}
+                },
+                'movies_to_be_merged': {
+                    'batman': {
+                        'bill': {'bong': {'note': 'yeah'}, 'note': 'old_foo'},
+                        'bruce': {'talk': 'tt'}
+                    },
+                    'spiderman': {
+                        'star_wars': {'lyrics': {'lyrics': 'la la'}}
+                    },
+                    'harry_potter': {
+                        'chamber': {}
+                    }
+                }
+            }
+        )
+        self.dfs.flush()
+        local_ss = dict_backend.DictBackend(self.serverBackupFilename)
+        local_dfs = dynamo_fs.DynamoFS(local_ss, self.rootFilename)
+        self.check_structure(local_dfs.root, \
+            {
+                'movies': {
+                    'batman': {'bill': {'note': 'foo'}, 'rose': {}},
+                    'spiderman': {'star_wars': {'lyrics': 'la la la'}}
+                },
+                'movies_to_be_merged': {
+                    'batman': {
+                        'bill': {'bong': {'note': 'yeah'}, 'note': 'old_foo'},
+                        'bruce': {'talk': 'tt'}
+                    },
+                    'spiderman': {
+                        'star_wars': {'lyrics': {'lyrics': 'la la'}}
+                    },
+                    'harry_potter': {
+                        'chamber': {}
+                    }
+                }
+            }
+        )
+
+
+
 
 
 if __name__ == '__main__':
