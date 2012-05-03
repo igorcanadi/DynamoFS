@@ -1,2 +1,2 @@
 #!/bin/sh
-ssh -i deckard.pem ec2-user@ec2-107-22-11-109.compute-1.amazonaws.com 
+ssh ec2-user@ec2-107-22-11-109.compute-1.amazonaws.com 
