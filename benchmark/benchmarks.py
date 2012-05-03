@@ -227,3 +227,7 @@ def runLocalBenchmarks(numTrials=10):
         print "\n".join(
             [",".join(map(str, row)) for row in runBerkeleyDB(3, fileSize, numTrials)]
         )
+
+if __name__ == '__main__':
+    runLocalBenchmarks()
+
