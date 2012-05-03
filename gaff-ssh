@@ -1,0 +1,2 @@
+#!/bin/sh
+ssh ec2-user@ec2-107-20-19-232.compute-1.amazonaws.com

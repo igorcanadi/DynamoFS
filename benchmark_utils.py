@@ -28,7 +28,7 @@ class BenchmarkTimer:
         variance = 0.0
         for s in self.samples:
             variance += (s - mean) ** 2.0
-        return math.sqrt(variance) 
+        return math.sqrt(variance)
 
 # Creates a clean, empty DynamoFS object.
 def emptyFs(backend, rootFilename):
@@ -80,3 +80,10 @@ def semirandomString(length, rangeMin = 32, rangeMax = 126):
 
 def semirandomArray(length, rangeMin = 32, rangeMax = 126):
     return array('b', [random.randint(rangeMin, rangeMax)] * length)
+
+# Takes in a list of tuples (or a list of lists) and prints it out to stdout
+# in a CSV format.
+def printCsv(data):
+    for line in data:
+        print ','.join(map(str, line))
+            

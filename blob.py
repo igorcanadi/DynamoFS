@@ -13,7 +13,6 @@ def dirties(fn):
         self._assert_valid_state()
         if self.clean:
             self.dirty = True
-            self._key = None
             self._blob = None
         return fn(self, *args, **kwargs)
     return wrapped
@@ -25,12 +24,11 @@ def validate(fn):
     """
     def wrapped(self, *args, **kwargs):
         self._assert_valid_state()
+        # this also means that self._key != None, because of invariants
         if self.invalid:
             self._blob = self.cntl.getdata(self._key)
             self._deserialize_data(self._blob)
-            self.dirty = False
             self.valid = True
-            self._key = None
         return fn(self, *args, **kwargs)
     return wrapped
 
@@ -43,11 +41,10 @@ class Blob(object):
         valid: whether this blob is valid -- that is, should the data be fetched from
             the backend before this blob can be read?
         """
-        self._key = key
         self._blob = None
         self.parent = parent
+        self._key = key
         self.valid = valid
-        self.dirty = valid
         self.cntl = cntl
         self._assert_valid_state()
 
@@ -59,9 +56,6 @@ class Blob(object):
 
     def _assert_valid_state(self):
         assert(self._key != None or self.valid == True)
-        # TODO: is this valid assert?
-#        assert(self._key != None or self.dirty == True)
-        assert(self.valid == True or self.dirty == False)
 
     def _delete_data(self):
         """
@@ -80,7 +74,6 @@ class Blob(object):
             self.commit()
             for child in self.children:
                 child.evict()
-        self.dirty = False
         self.valid = False
         self._delete_data()
         self._blob = None
@@ -93,36 +86,20 @@ class Blob(object):
         up-to-date state. If this node is clean, commit is a no-op.
         """
         self._assert_valid_state()
-        if self.dirty or self._key == None:
-            self._flush_down()
-        self._flush_up()
-
-    def _flush_up(self):
-        """
-        If self.dirty, then call _flush on self. If parent exists, call _flush_up
-        on parent. If no parent, update root on controller with self's key.
-        """
-        if self.parent != None:
-            self.parent._flush_up()
-        else:
-            self.cntl.update_root(self.key)
+        if self.dirty:
+            root = self
+            while root.parent != None:
+                root = root.parent
+            root._flush_down()
 
     def _flush_down(self):
         """
         For each child, call _flush_down on that child. Then, call _flush on self.
         """
-        if self.dirty or self._key == None:
+        if self.dirty:
             for child in self.children:
                 child._flush_down()
-            self._flush()
-
-    def _flush(self):
-        """
-        If this blob is dirty, push this blob to store and set this blob to clean.
-        """
-        if self.dirty or self._key == None:
             self.cntl.putdata(self.key, self.blob)
-            self.dirty = False
 
     @property
     def invalid(self):
@@ -171,7 +148,7 @@ class Blob(object):
         be stored in the backend. The returned key is guaranteed to be up-to-date according
         to the data currently stored. Does not check for whether this blob is valid.
         """
-        if self._key == None:
+        if self.dirty:
             self._update_hash_and_blob()
         return self._key
 
@@ -190,16 +167,18 @@ class Blob(object):
         """
         Getter for dirty property -- tells you whether the blob has uncommitted changes.
         """
-        return self._dirty
+        return self._key == None
 
     def setdirty(self, value):
         """
         Setter for dirty property -- tells you whether the blob has uncommitted changes.
         """
         
-        if value == True and self.parent != None and self.parent.dirty == False:
+        # we never want to set value to false, calling self.key will do it automatically
+        assert value == True
+        if self.parent != None and self.parent.dirty == False:
             self.parent.dirty = True
-        self._dirty = value
+        self._key = None
 
     dirty = property(getdirty, setdirty)
 
@@ -275,6 +254,7 @@ class DirectoryBlob(Blob):
         """
         # TODO: add garbage collection and everything 
         del self.items[key]
+        self.dirty = True
 
     @validate
     def keys(self):
@@ -343,6 +323,7 @@ class BlockListBlob(Blob):
     def __delitem__(self, key):
         # TODO: decrement reference count of deleted object
         del self.blocks[key]
+        self.dirty = True
 
     def _serialize_data(self):
         """
