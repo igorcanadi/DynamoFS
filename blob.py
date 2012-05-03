@@ -390,11 +390,6 @@ class BlockBlob(Blob):
         """
         if len(self.data) < index + len(value):
             self.data.extend([0 for i in range(index + len(value) - len(self.data))])
-#        lenself = len(self.data)
-#        midindex = min(index + len(value), lenself)
-#        extender =
-#        self.data[index:midindex] = array("B", value[:lenself - index])
-#        self.data.extend(value[lenself - index:])
         self.data[index:(index + len(value))] = array("B", value)
 
     @validate

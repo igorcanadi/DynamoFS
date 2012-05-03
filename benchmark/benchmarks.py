@@ -3,6 +3,7 @@ Code to perform official benchmarks for the paper's evaluation section.
 '''
 
 from random import randint
+import sys
 import benchmark_utils
 import dynamo_fs
 import os
@@ -124,7 +125,6 @@ def runAllWithFs(fsClass, depth, fileSize, idstring, numTrials=10):
             results.append(bench(fs, filename, fileSize))
             fs.flush()
     return results
-#    return runAllWithFile(fs, filename, fileSize)
 
 # Ensures that a given file does not exist.
 def ensureDelete(filename):
@@ -134,7 +134,7 @@ def ensureDelete(filename):
         pass
     
 # Runs all four benchmarks on BerkeleyDB.
-def runBerkeleyDB(depth, fileSize):
+def runBerkeleyDB(depth, fileSize, numTrials = 10):
     from berkeleydb_backend import BerkeleyDBBackend
     
     backingFile = 'benchmark/temp/bench.db'
@@ -146,10 +146,25 @@ def runBerkeleyDB(depth, fileSize):
         backend = BerkeleyDBBackend(backingFile)
         return dynamo_fs.DynamoFS(backend, fsRootFile)
 
-    return runAllWithFs(fsClass, depth, fileSize, "berkeleydb")
+    return runAllWithFs(fsClass, depth, fileSize, "berkeleydb", numTrials)
 
-# Runs all four benchmarks on DynamoDB.
-def runDynamoDB(depth, fileSize):
+# Runs all four benchmarks on a DictBackend.
+#def runDict(depth, fileSize):
+#    from dict_backend import DictBackend
+#
+#    backingFile = 'benchmark/data/bench.db'
+#    fsRootFile =  'benchmark/data/fs_root.txt'
+#    ensureDelete(backingFile)
+#    ensureDelete(fsRootFile)
+#
+#    def fsClass():
+#        backend = DictBackend(backingFile)
+#        return dynamo_fs.DynamoFS(backend, fsRootFile)
+#
+#    return runAllWithFs(fsClass, depth, fileSize, "dict")
+
+# Runs all four benchmarks on BerkeleyDB.
+def runDynamoDB(depth, fileSize, numTrials = 10):
     from dynamodb_backend import DynamoDBBackend
     
     fsRootFile =  'benchmark/temp/fs_root.txt'
@@ -159,10 +174,10 @@ def runDynamoDB(depth, fileSize):
         backend = DynamoDBBackend()
         return dynamo_fs.DynamoFS(backend, fsRootFile)
     
-    return runAllWithFs(fsClass, depth, fileSize, "dynamodb")
+    return runAllWithFs(fsClass, depth, fileSize, "dynamodb", numTrials)
 
-# Runs all four benchmarks on SimpleDB.
-def runSimpleDB(depth, fileSize):
+# Runs all four benchmarks on BerkeleyDB.
+def runSimpleDB(depth, fileSize, numTrials = 10):
     from simpledb_backend import SimpleDBBackend
     
     fsRootFile =  'benchmark/temp/fs_root.txt'
@@ -172,10 +187,10 @@ def runSimpleDB(depth, fileSize):
         backend = SimpleDBBackend()
         return dynamo_fs.DynamoFS(backend, fsRootFile)
     
-    return runAllWithFs(fsClass, depth, fileSize, "simpledb")
+    return runAllWithFs(fsClass, depth, fileSize, "simpledb", numTrials)
 
-# Runs all four benchmarks on S3.
-def runS3(depth, fileSize):
+# Runs all four benchmarks on BerkeleyDB.
+def runS3(depth, fileSize, numTrials = 10):
     from s3_backend import S3Backend
     
     fsRootFile =  'benchmark/temp/fs_root.txt'
@@ -185,10 +200,10 @@ def runS3(depth, fileSize):
         backend = S3Backend()
         return dynamo_fs.DynamoFS(backend, fsRootFile)
     
-    return runAllWithFs(fsClass, depth, fileSize, "s3")
+    return runAllWithFs(fsClass, depth, fileSize, "s3", numTrials)
 
 # Runs all four benchmarks on a LocalFS.
-def runLocalFS(depth, fileSize):
+def runLocalFS(depth, fileSize, numTrials = 10):
     from local_fs import LocalFS
     
     root = 'benchmark/temp/localfs'
@@ -200,4 +215,15 @@ def runLocalFS(depth, fileSize):
     def fsClass():
         return LocalFS(root)
 
-    return runAllWithFs(fsClass, depth, fileSize, "localfs")
+    return runAllWithFs(fsClass, depth, fileSize, "localfs", numTrials)
+
+def runLocalBenchmarks(numTrials=10):
+    for fileSize in range(100, 10**7, 100):
+        print >> sys.stderr, "Running LocalFS, file size %s" % fileSize
+        print "\n".join(
+            [",".join(map(str, row)) for row in runLocalFS(3, fileSize, numTrials)]
+        )
+        print >> sys.stderr, "Running BerkeleyDB, file size %s" % fileSize
+        print "\n".join(
+            [",".join(map(str, row)) for row in runBerkeleyDB(3, fileSize, numTrials)]
+        )
