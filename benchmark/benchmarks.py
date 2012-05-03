@@ -137,8 +137,8 @@ def ensureDelete(filename):
 def runBerkeleyDB(depth, fileSize, numTrials = 10):
     from berkeleydb_backend import BerkeleyDBBackend
     
-    backingFile = 'benchmark/data/bench.db'
-    fsRootFile =  'benchmark/data/fs_root.txt'
+    backingFile = 'benchmark/temp/bench.db'
+    fsRootFile =  'benchmark/temp/fs_root.txt'
     ensureDelete(backingFile)
     ensureDelete(fsRootFile)
 
@@ -167,7 +167,7 @@ def runBerkeleyDB(depth, fileSize, numTrials = 10):
 def runDynamoDB(depth, fileSize, numTrials = 10):
     from dynamodb_backend import DynamoDBBackend
     
-    fsRootFile =  'benchmark/data/fs_root.txt'
+    fsRootFile =  'benchmark/temp/fs_root.txt'
     ensureDelete(fsRootFile)
 
     def fsClass():
@@ -180,7 +180,7 @@ def runDynamoDB(depth, fileSize, numTrials = 10):
 def runSimpleDB(depth, fileSize, numTrials = 10):
     from simpledb_backend import SimpleDBBackend
     
-    fsRootFile =  'benchmark/data/fs_root.txt'
+    fsRootFile =  'benchmark/temp/fs_root.txt'
     ensureDelete(fsRootFile)
 
     def fsClass():
@@ -193,7 +193,7 @@ def runSimpleDB(depth, fileSize, numTrials = 10):
 def runS3(depth, fileSize, numTrials = 10):
     from s3_backend import S3Backend
     
-    fsRootFile =  'benchmark/data/fs_root.txt'
+    fsRootFile =  'benchmark/temp/fs_root.txt'
     ensureDelete(fsRootFile)
 
     def fsClass():
@@ -206,7 +206,7 @@ def runS3(depth, fileSize, numTrials = 10):
 def runLocalFS(depth, fileSize, numTrials = 10):
     from local_fs import LocalFS
     
-    root = 'benchmark/data/localfs'
+    root = 'benchmark/temp/localfs'
     try:
         shutil.rmtree(root) # Nuke the local fs.
     except:
