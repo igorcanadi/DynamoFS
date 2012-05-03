@@ -244,7 +244,7 @@ def runLocalFS(depth, fileSize, numTrials = 10):
     return runAllWithFs(fsClass, depth, fileSize, "localfs", numTrials)
 
 def runLocalBenchmarks(numTrials=10):
-    for fileSize in range(100, 10**7, (10**7) / 20):
+    for fileSize in range(10**7 / 20, 10**7, (10**7) / 20):
         print >> sys.stderr, "Running LocalFS, file size %s" % fileSize
         print "\n".join(
             [",".join(map(str, row)) for row in runLocalFS(3, fileSize, numTrials)]
