@@ -118,31 +118,35 @@ def mutateRandomTree(fs, root, depth, fanout, numMutations):
 def runAllWithFile(idstring):
     sampler = benchmark_utils.BenchmarkTimer()
 
-    def benchWriteSeq(fs, filename, fileSize):
+    def benchWriteSeq(fs, filename, depth, fileSize):
         return (
             'seqwrite',
             idstring,
+            depth,
             fileSize,
             write(fs, filename, fileSize, sampler, False).mean()
         )
-    def benchWriteRand(fs, filename, fileSize):
+    def benchWriteRand(fs, filename, depth, fileSize):
         return (
             'randwrite',
             idstring,
+            depth,
             fileSize,
             write(fs, filename, fileSize, sampler, True).mean()
         )
-    def benchReadSeq(fs, filename, fileSize):
+    def benchReadSeq(fs, filename, depth, fileSize):
         return (
             'seqread',
             idstring,
+            depth,
             fileSize,
             read(fs, filename, fileSize, sampler, False).mean()
         )
-    def benchReadRand(fs, filename, fileSize):
+    def benchReadRand(fs, filename, depth, fileSize):
         return (
             'randread',
             idstring,
+            depth,
             fileSize,
             read(fs, filename, fileSize, sampler, True).mean()
         )
@@ -163,7 +167,7 @@ def runAllWithFs(fsClass, depth, fileSize, idstring, numTrials=10):
     for i in range(numTrials):
         for bench in runAllWithFile(idstring):
             fs = fsClass()
-            results.append(bench(fs, filename, fileSize))
+            results.append(bench(fs, filename, depth, fileSize))
             fs.flush()
     return results
 
