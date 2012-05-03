@@ -28,7 +28,7 @@ class BenchmarkTimer:
         variance = 0.0
         for s in self.samples:
             variance += (s - mean) ** 2.0
-        return math.sqrt(variance) 
+        return math.sqrt(variance)
 
 # Creates a clean, empty DynamoFS object.
 def emptyFs(backend, rootFilename):

@@ -1,0 +1,3 @@
+export RICHARD="ec2-user@ec2-107-22-11-109.compute-1.amazonaws.com"
+export GAFF="ec2-user@ec2-107-20-19-232.compute-1.amazonaws.com"
+
