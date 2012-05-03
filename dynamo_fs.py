@@ -130,7 +130,7 @@ class DynamoFS:
 
     # this will merge path with the tree denoted by the key
     # conflicting folders will be merged recursively
-    # conflicting files will be changed to the shared version
+    # conflicting files will be changed to the shared version (denoted by the key)
     # non-conflicting files or folders will be added to the tree
     def merge_with_shared_key(self, path, key):
         target = self._find_leaf(path)
