@@ -258,6 +258,9 @@ def runLocalBenchmarks(numTrials=10):
 def merge(fs):
     makeRandomTree(fs, '/', 7, 2, CHUNK_SIZE * 16) # Total file size: (2^7)(16)(4096) = 8388608 bytes
     mutateRandomTree(fs, '/', 7, 2, 128) # Make 128 random mutations.
-    
     # TODO do the merge and time it.
     
+    
+    
+if __name__ == '__main__':
+    runLocalBenchmarks()

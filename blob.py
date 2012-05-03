@@ -91,6 +91,7 @@ class Blob(object):
             while root.parent != None:
                 root = root.parent
             root._flush_down()
+            self.cntl.update_root(root.key)
 
     def _flush_down(self):
         """
