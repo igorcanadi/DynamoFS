@@ -1,7 +1,7 @@
 *.pyc
 test/data/localfs
-benchmark/data/localfs
-benchmark/data/bench.db
+benchmark/temp/localfs
+benchmark/temp/bench.db
 jython2.5.2/cachedir
 test/data/test.dat
 aws_credentials.py
