@@ -1,6 +1,6 @@
 # Current provisioning.
-R=640
-W=320
+R=1280
+W=640
 
 TIME=`date +%s`
 
