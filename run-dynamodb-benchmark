@@ -1,0 +1,10 @@
+# Current provisioning.
+R=80
+W=40
+
+TIME=`date +%s`
+
+DUMP=${TIME}-r${R}-w${W}.csv
+
+python benchmark/dynamodb_benchmark.py > benchmark/data/dynamodb-ec2/$DUMP
+
