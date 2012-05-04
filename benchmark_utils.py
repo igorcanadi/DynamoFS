@@ -93,4 +93,4 @@ def printCsv(data):
 # Based on http://www.linuxquestions.org/questions/linux-kernel-70/how-to-disable-filesystem-cache-627012/
 def clearFSCache():
     call(['sync'])
-    call(['echo', '3', '>', '/proc/sys/vm/drop_caches'])
+    call(['sudo', 'echo', '3', '>', '/proc/sys/vm/drop_caches'])
