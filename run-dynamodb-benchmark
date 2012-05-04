@@ -6,5 +6,5 @@ TIME=`date +%s`
 
 DUMP=${TIME}-r${R}-w${W}.csv
 
-python benchmark/dynamodb_benchmark.py > benchmark/data/dynamodb-ec2/DUMP
+python benchmark/dynamodb_benchmark.py > benchmark/data/dynamodb-ec2/$DUMP
 
