@@ -1,6 +1,8 @@
 # Timing and other utilities for micro-benchmarking.
 
 from array import array
+import shutil
+from subprocess import call
 import time
 import dynamo_fs
 import os
@@ -86,4 +88,9 @@ def semirandomArray(length, rangeMin = 32, rangeMax = 126):
 def printCsv(data):
     for line in data:
         print ','.join(map(str, line))
-            
+
+# Clears the filesystem cache. Only works on Linux.
+# Based on http://www.linuxquestions.org/questions/linux-kernel-70/how-to-disable-filesystem-cache-627012/
+def clearFSCache():
+    call(['sync'])
+    call(['sudo', 'echo', '3', '>', '/proc/sys/vm/drop_caches'])

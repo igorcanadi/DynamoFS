@@ -166,6 +166,7 @@ def runAllWithFs(fsClass, depth, fileSize, idstring, numTrials=10):
     results = list()
     for i in range(numTrials):
         for bench in runAllWithFile(idstring):
+            benchmark_utils.clearFSCache()
             fs = fsClass()
             results.append(bench(fs, filename, depth, fileSize))
             fs.flush()
@@ -248,7 +249,7 @@ def runLocalFS(depth, fileSize, numTrials = 10):
     return runAllWithFs(fsClass, depth, fileSize, "localfs", numTrials)
 
 def runLocalBenchmarks(numTrials=10):
-    for fileSize in range(10**7 / 20, 10**7, (10**7) / 20):
+    for fileSize in range(10**7, 0,  -(10**7) / 20):
         print >> sys.stderr, "Running LocalFS, file size %s" % fileSize
         print "\n".join(
             [",".join(map(str, row)) for row in runLocalFS(3, fileSize, numTrials)]
@@ -263,8 +264,6 @@ def merge(fs):
     makeRandomTree(fs, '/', 7, 2, CHUNK_SIZE * 16) # Total file size: (2^7)(16)(4096) = 8388608 bytes
     mutateRandomTree(fs, '/', 7, 2, 128) # Make 128 random mutations.
     # TODO do the merge and time it.
-    
-    
     
 if __name__ == '__main__':
     runLocalBenchmarks()
