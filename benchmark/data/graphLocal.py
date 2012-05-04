@@ -120,31 +120,35 @@ def main():
     barwidth = 0.2
     rects = list()
     colors = ['r', 'g', 'y', 'b']
+    xlabels = map(lambda x: float(x[0]) / 10**6, sortedTuples(getAverages(data[0])))
+    print xlabels
     for i in range(4):
-        print getAverages(data[i])
 #        toPlot = map(lambda x : x['time'], getAverages(data[i]))
-        toPlot = map(lambda x: x[1], sortedTuples(getAverages(data[i])))
-        print len(toPlot)
-        print toPlot
-        print ind + i * barwidth
+        local = map(lambda x: x[1], sortedTuples(getAverages(data[i])))
+        berk = map(lambda x: x[1], sortedTuples(getAverages(data[i + 4])))
+        toPlot = map(lambda (x, y): x / y, zip(berk, local))
         rects.append(ax.bar(
             ind + i * barwidth,
             toPlot,
             width = barwidth,
             color = colors[i],
         ))
-    for i in range(4, 8):
-        print getAverages(data[i])
-#        toPlot = map(lambda x : x['time'], getAverages(data[i]))
-        toPlot = map(lambda x: -x[1], sortedTuples(getAverages(data[i])))
-        print len(toPlot)
-        print toPlot
-        ax.bar(ind + (i - 4) * barwidth,
-            toPlot,
-            width = barwidth,
-            color = colors[i - 4]
-        )
+#    for i in range(4, 8):
+#        print getAverages(data[i])
+##        toPlot = map(lambda x : x['time'], getAverages(data[i]))
+#        toPlot = map(lambda x: -x[1], sortedTuples(getAverages(data[i])))
+#        print len(toPlot)
+#        print toPlot
+#        ax.bar(ind + (i - 4) * barwidth,
+#            toPlot,
+#            width = barwidth,
+#            color = colors[i - 4]
+#        )
 
+    ax.set_xticks(ind + barwidth * 2)
+    ax.set_xticklabels(xlabels)
+    ax.set_ylabel("Speedup ($T_{BerkeleyDB} / T_{LocalFS}$)")
+    ax.set_xlabel("File size (MB)")
     ax.legend(rects, legendStrings, loc="best")
     plt.show()
     return
