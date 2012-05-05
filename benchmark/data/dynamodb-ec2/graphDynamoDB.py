@@ -39,20 +39,20 @@ for f in os.listdir(home):
                       float(csvLine['latency'])
                       ]
             table.append(record)
-            
+
 
 # Filters the data, producing an arbitrary subset of records.
 def filter(table, timestamp=None, benchType=None, readUnits=None, writeUnits=None):
     measurements = []
     for record in table:
         if timestamp is not None and timestamp != record[0]:
-            break
+            continue
         if benchType is not None and benchType != record[1]:
-            break
+            continue
         if readUnits is not None and readUnits != record[5]:
-            break
+            continue
         if writeUnits is not None and writeUnits != record[6]:
-            break
+            continue
         measurements.append(record)
     return measurements
 
