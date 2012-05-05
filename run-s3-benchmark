@@ -1,0 +1,6 @@
+# Current provisioning.
+TIME=`date +%s`
+DUMP=${TIME}.csv
+
+python benchmark/s3_benchmark.py > benchmark/data/s3-ec2/$DUMP
+
