@@ -6,6 +6,8 @@ import csv
 import os
 import re
 import pylab
+import matplotlib.ticker as ticker
+from matplotlib.pyplot import gca
 
 BENCH_TYPES = ['seqwrite', 'seqread', 'randwrite', 'randread'];
 
@@ -56,31 +58,59 @@ def filter(table, timestamp=None, benchType=None, readUnits=None, writeUnits=Non
         measurements.append(record)
     return measurements
 
-# Trims columns out of a table of data.
-def project(table, columns):
+# Gets a column out of a table of data.
+def project(table, column):
     # Convert column names to indices.
-    columns = map(COLUMNS.index, columns)
+    column = COLUMNS.index(column)
 
     newTable = []
     for record in table:
-        newRecord = []
-        for column in columns:
-            newRecord.append(record[column])
-        newTable.append(newRecord)
+        newTable.append(record[column])
     return newTable
-        
+
+# Condenses a set of scattered points, returning a list of x-coordinates
+# without duplicates and a list of lists of corresponding y-coordinates.
+def condense(xCoords, yCoords):
+    # Tuple and sort the data to group x-coordinates together.
+    tuples = zip(xCoords, yCoords)
+    tuples.sort()
+    
+    # Condense and collect.
+    newXCoords = []
+    newYCoords = []
+    yList = []
+    lastX = tuples[0][0]
+    for (x, y) in tuples:
+        if x == lastX:
+            yList.append(y)
+        else:
+            newYCoords.append(yList)
+            newXCoords.append(x)
+            yList = []
+            lastX = x
+            
+    return (newXCoords, newYCoords)
     
 def mean(data):
     return sum(data) / len(data)
 
 def main():
     seqwriteData = filter(table, benchType='seqwrite')
-    xData = project(seqwriteData, ['writeUnits'])
-    yData = project(seqwriteData, ['latency'])
-     
-    print xData
-    print yData
-    pylab.scatter(xData, yData)
+    xData = project(seqwriteData, 'writeUnits')
+    yData = project(seqwriteData, 'latency')
+    
+    # Each sample represents 10 trials.
+    yData = map(lambda x:x/10, yData)
+    
+    (xData, yData) = condense(xData, yData)
+    pylab.boxplot(yData)
+    
+    fmt = ticker.FixedFormatter(map(str, xData))
+    ax = gca()
+    ax.get_xaxis().set_major_formatter(fmt)
+    ax.set_ylabel("Sequential block write latency (s)")
+    ax.set_xlabel("Provisioned write units")
+    
     pylab.show()
 
 if __name__ == '__main__':
