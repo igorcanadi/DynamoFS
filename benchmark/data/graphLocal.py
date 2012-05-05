@@ -114,44 +114,29 @@ def main():
     reader = csv.DictReader(open(filename, 'r'), fieldnames = fieldnames)
 
     data = sortByType(reader)
-    ind = np.arange(20)
-    fig = plt.figure()
+    ind = np.arange(20) + 0.1
+    fig = plt.figure(figsize = (8, 4), dpi = 600)
     ax = fig.add_subplot(111)
     barwidth = 0.2
     rects = list()
     colors = ['r', 'g', 'y', 'b']
-    xlabels = map(lambda x: float(x[0]) / 10**6, sortedTuples(getAverages(data[0])))
+    xlabels = map(lambda x: int(x[0]) / 10**6, sortedTuples(getAverages(data[0])))[1::2]
     print xlabels
     for i in range(4):
-#        toPlot = map(lambda x : x['time'], getAverages(data[i]))
-        local = map(lambda x: x[1], sortedTuples(getAverages(data[i])))
-        berk = map(lambda x: x[1], sortedTuples(getAverages(data[i + 4])))
-        toPlot = map(lambda (x, y): x / y, zip(berk, local))
+        toPlot = map(lambda x: float(x[0]) / x[1] / 10**6, sortedTuples(getAverages(data[i + 4])))
         rects.append(ax.bar(
             ind + i * barwidth,
             toPlot,
             width = barwidth,
             color = colors[i],
         ))
-#    for i in range(4, 8):
-#        print getAverages(data[i])
-##        toPlot = map(lambda x : x['time'], getAverages(data[i]))
-#        toPlot = map(lambda x: -x[1], sortedTuples(getAverages(data[i])))
-#        print len(toPlot)
-#        print toPlot
-#        ax.bar(ind + (i - 4) * barwidth,
-#            toPlot,
-#            width = barwidth,
-#            color = colors[i - 4]
-#        )
 
-    ax.set_xticks(ind + barwidth * 2)
+    ax.set_xticks((ind + barwidth * 2)[1::2])
     ax.set_xticklabels(xlabels)
-    ax.set_ylabel("Speedup ($T_{BerkeleyDB} / T_{LocalFS}$)")
+    ax.set_ylabel("Throughput (MB)")
     ax.set_xlabel("File size (MB)")
     ax.legend(rects, legendStrings, loc="best")
-    plt.show()
-    return
+    plt.savefig("berk_ebs.svg")
 
 if __name__ == '__main__':
     main()

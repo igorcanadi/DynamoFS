@@ -166,8 +166,9 @@ def runAllWithFs(fsClass, depth, fileSize, idstring, numTrials=10):
     results = list()
     for i in range(numTrials):
         for bench in runAllWithFile(idstring):
-            benchmark_utils.clearFSCache()
+            del fs
             fs = fsClass()
+            benchmark_utils.clearFSCache()
             results.append(bench(fs, filename, depth, fileSize))
             fs.flush()
     return results
