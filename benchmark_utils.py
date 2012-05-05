@@ -4,6 +4,7 @@ from array import array
 import shutil
 from subprocess import call
 import time
+import sys
 import dynamo_fs
 import os
 import random
@@ -89,9 +90,17 @@ def printCsv(data):
     for line in data:
         print ','.join(map(str, line))
 
+couldNotDrop = False # indicates whether drop has failed yet; this way
+                     # we don't print more than one warning
 # Clears the filesystem cache. Only works on Linux.
 # Based on http://www.linuxquestions.org/questions/linux-kernel-70/how-to-disable-filesystem-cache-627012/
 def clearFSCache():
-    call(['sync'])
-    with open('/proc/sys/vm/drop_caches', 'w') as f:
-        f.write("3")
+    global couldNotDrop
+    try:
+        call(['sync'])
+        with open('/proc/sys/vm/drop_caches', 'w') as f:
+            f.write("3")
+    except IOError, e:
+        if not couldNotDrop:
+            print >> sys.stderr, "Warning: couldn't drop caches."
+            couldNotDrop = True
