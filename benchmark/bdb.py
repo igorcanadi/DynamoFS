@@ -4,7 +4,7 @@ import os
 import shutil
 import sys
 import time
-from benchmark_utils import randomString
+from benchmark_utils import randomString, semirandomString
 from file import PAGE_SIZE
 
 __author__ = 'jpaton'
@@ -23,14 +23,14 @@ def main():
         beginTime = time.time()
         for block in range((size + PAGE_SIZE - 1) / PAGE_SIZE):
             toWrite = min(PAGE_SIZE, size - totalWritten)
-            string = randomString(toWrite)
+            string = semirandomString(toWrite)
             hash = hashlib.sha512(string).hexdigest()
             db[hash] = string
             totalWritten += toWrite
         db.close()
         endTime = time.time()
         delta = endTime - beginTime
-        print "Total written: " + str(totalWritten) + " in " + str(delta)
+        print "write,barebdb,%s" % str(delta)
 
 if __name__ == '__main__':
     main()
