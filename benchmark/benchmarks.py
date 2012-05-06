@@ -269,7 +269,7 @@ def merge(fs):
     
     # Make a clone of the filesystem.
     fs2RootFile =  'benchmark/temp/fs_root_2.txt'
-    fs2 = dynamo_fs.DynamoFS(fs.server, fs2RootFile)
+    fs2 = dynamo_fs.DynamoFS(fs.get_backend(), fs2RootFile)
     
     # Mutate both copies with 128 random mutations.
     mutateRandomTree(fs, '/', 7, 2, 128)

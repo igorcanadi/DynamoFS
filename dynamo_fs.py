@@ -35,6 +35,10 @@ class DynamoFS:
         # so this just generates it
         self.root = blob.DirectoryBlob(root_hash, self.cntl, 
                 None, root_hash == None)
+    
+    # Returns a reference to this FS's backend key=value store.
+    def get_backend(self):
+        return self.cntl.server
 
     def cleanup(self):
         self.root.commit()
