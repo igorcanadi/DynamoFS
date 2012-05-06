@@ -148,12 +148,12 @@ class DynamoFS:
                 self._output_whole_tree(node[filename], level + 1)
         elif isinstance(node, blob.BlockListBlob):
             if suppressFileContents:
-                print "(" + node.key[0:5] + ")"
+                contents = ''
             else:
-                print "\t" * level + "".join([block.data_as_string() for block in node.children]) + \
-                    " (" + node.key[0:5] + ")"
+                contents = ''.join([block.data_as_string() for block in node.children]) + ' '    
+                print "\t" * level + contents + "(" + node.key[0:5] + ")"
 
-    def debug_output_whole_tree(self, suppressFileContents = False):
+    def debug_output_whole_tree(self, suppressFileContents=False):
         print "---------------------------- WHOLE TREE -----------------"
 #        self.root.commit()
         self._output_whole_tree(self.root, 0, suppressFileContents=suppressFileContents)
