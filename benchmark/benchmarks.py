@@ -116,9 +116,9 @@ def mutateRandomTree(fs, root, depth, fanout, numMutations):
 #   random read
 # Returns a dict containing the time readings from all four benchmarks.
 def runAllWithFile(idstring):
-    sampler = benchmark_utils.BenchmarkTimer()
 
     def benchWriteSeq(fs, filename, depth, fileSize):
+        sampler = benchmark_utils.BenchmarkTimer()
         return (
             'seqwrite',
             idstring,
@@ -127,6 +127,7 @@ def runAllWithFile(idstring):
             write(fs, filename, fileSize, sampler, False).mean()
         )
     def benchWriteRand(fs, filename, depth, fileSize):
+        sampler = benchmark_utils.BenchmarkTimer()
         return (
             'randwrite',
             idstring,
@@ -135,6 +136,7 @@ def runAllWithFile(idstring):
             write(fs, filename, fileSize, sampler, True).mean()
         )
     def benchReadSeq(fs, filename, depth, fileSize):
+        sampler = benchmark_utils.BenchmarkTimer()
         return (
             'seqread',
             idstring,
@@ -143,6 +145,7 @@ def runAllWithFile(idstring):
             read(fs, filename, fileSize, sampler, False).mean()
         )
     def benchReadRand(fs, filename, depth, fileSize):
+        sampler = benchmark_utils.BenchmarkTimer()
         return (
             'randread',
             idstring,
@@ -249,8 +252,8 @@ def runLocalFS(depth, fileSize, numTrials = 10):
 
     return runAllWithFs(fsClass, depth, fileSize, "localfs", numTrials)
 
-def runLocalBenchmarks(numTrials=10):
-    for fileSize in range(10**7, 0,  -(10**7) / 20):
+def runLocalBenchmarks(numTrials=10, maxSize=500000):
+    for fileSize in range(maxSize, 0,  -maxSize / 20):
         print >> sys.stderr, "Running LocalFS, file size %s" % fileSize
         print "\n".join(
             [",".join(map(str, row)) for row in runLocalFS(3, fileSize, numTrials)]
@@ -265,6 +268,13 @@ def merge(fs):
     makeRandomTree(fs, '/', 7, 2, CHUNK_SIZE * 16) # Total file size: (2^7)(16)(4096) = 8388608 bytes
     mutateRandomTree(fs, '/', 7, 2, 128) # Make 128 random mutations.
     # TODO do the merge and time it.
+
+def main():
+    if len(sys.argv) == 2:
+        maxSize = int(sys.argv[1])
+        runLocalBenchmarks(maxSize = maxSize)
+    else:
+        runLocalBenchmarks()
     
 if __name__ == '__main__':
-    runLocalBenchmarks()
+    main()

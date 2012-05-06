@@ -14,7 +14,7 @@ import csv
 
 def printUsage():
     print """\
-Usage: %s <csv file name>\
+Usage: %s <csv file name> <svg file name>\
 """ % sys.argv[0]
 
 """
@@ -99,7 +99,7 @@ def sortedTuples(data):
     return sorted(data.items(), lambda x, y: int(x[0]) - int(y[0]))
 
 def main():
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         printUsage()
         sys.exit(1)
 
@@ -120,7 +120,7 @@ def main():
     barwidth = 0.2
     rects = list()
     colors = ['r', 'g', 'y', 'b']
-    xlabels = map(lambda x: int(x[0]) / 10**6, sortedTuples(getAverages(data[0])))[1::2]
+    xlabels = map(lambda x: float(x[0]) / 10**6, sortedTuples(getAverages(data[0])))[1::2]
     print xlabels
     for i in range(4):
         toPlot = map(lambda x: float(x[0]) / x[1] / 10**6, sortedTuples(getAverages(data[i + 4])))
@@ -136,7 +136,7 @@ def main():
     ax.set_ylabel("Throughput (MB)")
     ax.set_xlabel("File size (MB)")
     ax.legend(rects, legendStrings, loc="best")
-    plt.savefig("berk_ebs.svg")
+    plt.savefig(sys.argv[2])
 
 if __name__ == '__main__':
     main()
