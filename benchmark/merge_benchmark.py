@@ -7,8 +7,9 @@ from dynamo_fs import DynamoFS
 from benchmarks import merge
 
 backend = BerkeleyDBBackend('benchmark/temp/bench.db')
-fs = DynamoFS(backend, 'benchmark/temp/fs_root.txt')
+fsRootFile = 'benchmark/temp/fs_root.txt'
+fs = DynamoFS(backend, fsRootFile)
 
-sampler = merge(fs)
+sampler = merge(fs, fsRootFile)
 
 print sampler.samples
