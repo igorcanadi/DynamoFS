@@ -265,27 +265,22 @@ def merge(fs, fsRootFile):
     sampler = benchmark_utils.BenchmarkTimer()
     
     # Populate the filesystem.
-    makeRandomTree(fs, '/', 7, 2, CHUNK_SIZE * 16) # Total file size: (2^7)(16)(4096) = 8388608 bytes
+    fs.mkdir('/', '_')
+    makeRandomTree(fs, '/_', 7, 2, CHUNK_SIZE * 16) # Total file size: (2^7)(16)(4096) = 8388608 bytes
     
-    # Make a clone of the filesystem.
-    fs2 = dynamo_fs.DynamoFS(fs.get_backend(), fsRootFile)
-    
-    print "FS:"
-    fs.debug_output_whole_tree(True)
-    print "FS2:"
-    fs2.debug_output_whole_tree(True)
+    # Make a clone of the filesystem, first copying the root-file directory.
+    shutil.copy(fsRootFile, fsRootFile + '.copy')
+    fs2 = dynamo_fs.DynamoFS(fs.get_backend(), fsRootFile + '.copy')
 
     # Mutate both copies with 128 random mutations.
-    print "Mutating fs..."
-    mutateRandomTree(fs, '/', 7, 2, 128)
-    print "Mutating fs2..."
-    mutateRandomTree(fs2, '/', 7, 2, 128)
+    mutateRandomTree(fs, '/_', 7, 2, 128)
+    mutateRandomTree(fs2, '/_', 7, 2, 128)
     
     # Merge the two filesystems back together.
-    key = fs.get_key_for_sharing('/')
+    key = fs.get_key_for_sharing('/_')
     
     sampler.begin()
-    fs2.merge_with_shared_key('/', key)
+    fs2.merge_with_shared_key('/_', key)
     sampler.end()
     
     return sampler

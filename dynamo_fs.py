@@ -118,7 +118,6 @@ class DynamoFS:
         if blob_target.key == blob_merging.key:
             # we're good
             return
-        print filename
         assert not isinstance(blob_target, blob.BlockBlob)
         if isinstance(blob_target, blob.BlockListBlob):
             # overwrite
