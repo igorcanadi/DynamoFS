@@ -261,15 +261,14 @@ def runLocalBenchmarks(numTrials=10):
         )
 
 # Benchmarks the merge call.
-def merge(fs):
+def merge(fs, fsRootFile):
     sampler = benchmark_utils.BenchmarkTimer()
     
     # Populate the filesystem.
     makeRandomTree(fs, '/', 7, 2, CHUNK_SIZE * 16) # Total file size: (2^7)(16)(4096) = 8388608 bytes
     
     # Make a clone of the filesystem.
-    fs2RootFile =  'benchmark/temp/fs_root_2.txt'
-    fs2 = dynamo_fs.DynamoFS(fs.get_backend(), fs2RootFile)
+    fs2 = dynamo_fs.DynamoFS(fs.get_backend(), fsRootFile)
     
     print "FS:"
     fs.debug_output_whole_tree(True)
