@@ -94,12 +94,12 @@ def makeRandomTree(fs, root, depth, fanout, fileSize):
             
 # Randomly mutates files in a tree created by makeRandomTree.
 def mutateRandomTree(fs, root, depth, fanout, numMutations):
-    for _ in range(0, numMutations):
+    for i in range(0, numMutations):
         # Create a random path.
         path = root
         for _ in range(0, depth + 1): # Add 1 to create the filename at the end of the directory string.
             path = concatPath(path, str(randint(0, fanout - 1)))
-        
+
         # Write a chunk to the file.
         f = fs.open(path, 'w')
         if f.stringOptimized:
@@ -271,8 +271,15 @@ def merge(fs):
     fs2RootFile =  'benchmark/temp/fs_root_2.txt'
     fs2 = dynamo_fs.DynamoFS(fs.get_backend(), fs2RootFile)
     
+    print "FS:"
+    fs.debug_output_whole_tree(True)
+    print "FS2:"
+    fs2.debug_output_whole_tree(True)
+
     # Mutate both copies with 128 random mutations.
+    print "Mutating fs..."
     mutateRandomTree(fs, '/', 7, 2, 128)
+    print "Mutating fs2..."
     mutateRandomTree(fs2, '/', 7, 2, 128)
     
     # Merge the two filesystems back together.
