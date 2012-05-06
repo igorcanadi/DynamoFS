@@ -5,7 +5,7 @@ import os
 import re
 import pylab
 import matplotlib.ticker as ticker
-from matplotlib.pyplot import gca
+from matplotlib.pyplot import gca, title
 
 BENCH_TYPES = ['seqwrite', 'seqread', 'randwrite', 'randread'];
 
@@ -28,7 +28,7 @@ for home in homes:
         matches = pageSizePattern.match(p)
         pageSize = int(matches.group(1))        
     
-        for f in os.listdir(p):
+        for f in os.listdir(home + '/' + p):
             matches = dynPattern.match(f)
             if matches is not None:
                 benchType = 'dynamodb'
@@ -50,7 +50,7 @@ for home in homes:
                     readUnits = 0
                     writeUnits = 0
                 
-                csvReader = csv.DictReader(open(home + '/' + f, 'r'), csvFields)
+                csvReader = csv.DictReader(open(home + '/' + p + '/' + f, 'r'), csvFields)
                 for csvLine in csvReader:
                     # Build a record for the table.
                     record = [timestamp,
@@ -118,19 +118,32 @@ def condense(xCoords, yCoords):
             yList.append(y)
         else:
             newYCoords.append(yList)
-            newXCoords.append(x)
-            yList = []
+            newXCoords.append(lastX)
+            yList = [y]
             lastX = x
+            
+    # Clean up the from the very last loop iteration.
+    newYCoords.append(yList)
+    newXCoords.append(lastX)
             
     return (newXCoords, newYCoords)
     
+
+# Generates a graph comparing different backends (s3 and dynamodb) and
+# different provisioning levels (for dynamodb). THe page size to use for
+# comparison is user-supplied.
+def graphBackendComparison(pageSize):
+    # Do analysis using random write numbers.
+    benchType = 'randwrite'
     
-def main():
-    # Do analysis of sequential writes.
-    benchType = 'seqwrite'
-    
-    dynData = filter(table, benchType=benchType, backend='dynamodb')
-    s3Data = filter(table, benchType=benchType, backend='s3')
+    dynData = filter(table,
+                     benchType=benchType,
+                     backend='dynamodb',
+                     pageSize=pageSize)
+    s3Data = filter(table,
+                    benchType=benchType,
+                    backend='s3',
+                    pageSize=pageSize)
     
     dynXData = project(dynData, 'writeUnits')
     dynYData = project(dynData, 'latency')
@@ -151,8 +164,43 @@ def main():
     ax.get_xaxis().set_major_formatter(fmt)
     ax.set_ylabel("Sequential block write latency (s)")
     ax.set_xlabel("Provisioned write units")
+    title('Page Size = %d' % pageSize)
     
     pylab.show()
 
-if __name__ == '__main__':
-    main()
+# Generates a graph comparing performance using different page sizes for
+# the same backend.
+def graphPageSizeComparison(backend, writeUnits):
+    # Do analysis using random write numbers.
+    benchType = 'randwrite'
+    
+    data = filter(table,
+                  benchType=benchType,
+                  backend=backend,
+                  writeUnits=writeUnits)
+    
+    xData = project(data, 'pageSize')
+    yData = project(data, 'latency')
+    
+    # Each sample represents 10 trials.
+    yData = map(lambda x:x/10, yData)
+    
+    (xData, yData) = condense(xData, yData)
+    
+    pylab.boxplot(yData)
+    fmt = ticker.FixedFormatter(map(str, xData))
+    ax = gca()
+    ax.get_xaxis().set_major_formatter(fmt)
+    ax.set_ylabel("Sequential block write latency (s)")
+    ax.set_xlabel("Page size (B)")
+    if backend == 's3':
+        title('Backend: S3')
+    else:
+        title('Backend: DynamoDB; Write Units = %d' % writeUnits)
+    
+    pylab.show()
+
+
+# Code to run for this script:
+graphPageSizeComparison('s3', 0)
+#graphBackendComparison(4096)
