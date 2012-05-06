@@ -90,6 +90,7 @@ def printCsv(data):
     for line in data:
         print ','.join(map(str, line))
 
+
 couldNotDrop = False # indicates whether drop has failed yet; this way
                      # we don't print more than one warning
 # Clears the filesystem cache. Only works on Linux.
@@ -104,3 +105,4 @@ def clearFSCache():
         if not couldNotDrop:
             print >> sys.stderr, "Warning: couldn't drop caches."
             couldNotDrop = True
+            

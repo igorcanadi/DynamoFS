@@ -1,0 +1,5 @@
+PAGESIZE=4096
+TIME=`date +%s`
+DUMP=benchmark/data/s3-ec2/page${PAGESIZE}/${TIME}.csv
+
+python benchmark/s3_benchmark.py > $DUMP

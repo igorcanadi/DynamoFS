@@ -94,12 +94,12 @@ def makeRandomTree(fs, root, depth, fanout, fileSize):
             
 # Randomly mutates files in a tree created by makeRandomTree.
 def mutateRandomTree(fs, root, depth, fanout, numMutations):
-    for _ in range(0, numMutations):
+    for i in range(0, numMutations):
         # Create a random path.
         path = root
         for _ in range(0, depth + 1): # Add 1 to create the filename at the end of the directory string.
             path = concatPath(path, str(randint(0, fanout - 1)))
-        
+
         # Write a chunk to the file.
         f = fs.open(path, 'w')
         if f.stringOptimized:
@@ -263,18 +263,37 @@ def runLocalBenchmarks(numTrials=10, maxSize=500000):
             [",".join(map(str, row)) for row in runBerkeleyDB(3, fileSize, numTrials)]
         )
 
-# Benchmarks the merge call.
-def merge(fs):
-    makeRandomTree(fs, '/', 7, 2, CHUNK_SIZE * 16) # Total file size: (2^7)(16)(4096) = 8388608 bytes
-    mutateRandomTree(fs, '/', 7, 2, 128) # Make 128 random mutations.
-    # TODO do the merge and time it.
-
 def main():
     if len(sys.argv) == 2:
         maxSize = int(sys.argv[1])
         runLocalBenchmarks(maxSize = maxSize)
     else:
         runLocalBenchmarks()
+
+# Benchmarks the merge call.
+def merge(fs, fsRootFile):
+    sampler = benchmark_utils.BenchmarkTimer()
     
+    # Populate the filesystem.
+    fs.mkdir('/', '_')
+    makeRandomTree(fs, '/_', 7, 2, CHUNK_SIZE * 16) # Total file size: (2^7)(16)(4096) = 8388608 bytes
+    
+    # Make a clone of the filesystem, first copying the root-file directory.
+    shutil.copy(fsRootFile, fsRootFile + '.copy')
+    fs2 = dynamo_fs.DynamoFS(fs.get_backend(), fsRootFile + '.copy')
+
+    # Mutate both copies with 128 random mutations.
+    mutateRandomTree(fs, '/_', 7, 2, 128)
+    mutateRandomTree(fs2, '/_', 7, 2, 128)
+    
+    # Merge the two filesystems back together.
+    key = fs.get_key_for_sharing('/_')
+    
+    sampler.begin()
+    fs2.merge_with_shared_key('/_', key)
+    sampler.end()
+    
+    return sampler
+
 if __name__ == '__main__':
     main()

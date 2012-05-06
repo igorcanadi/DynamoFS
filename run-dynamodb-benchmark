@@ -1,10 +1,9 @@
 # Current provisioning.
 R=1280
 W=640
-
+PAGESIZE=4096
 TIME=`date +%s`
 
-DUMP=${TIME}-r${R}-w${W}.csv
+DUMP=benchmark/data/dynamodb-ec2/page${PAGESIZE}/${TIME}-r${R}-w${W}.csv
 
-python benchmark/dynamodb_benchmark.py > benchmark/data/dynamodb-ec2/$DUMP
-
+python benchmark/dynamodb_benchmark.py > $DUMP

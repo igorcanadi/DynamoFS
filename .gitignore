@@ -5,7 +5,7 @@ benchmark/temp/bench.db
 jython2.5.2/cachedir
 test/data/test.dat
 aws_credentials.py
-fs_root.txt
+fs_root.txt*
 server_stub_backup.dat
 sqlite.db
 test/data/fs_root.txt
