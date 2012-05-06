@@ -262,9 +262,28 @@ def runLocalBenchmarks(numTrials=10):
 
 # Benchmarks the merge call.
 def merge(fs):
+    sampler = benchmark_utils.BenchmarkTimer()
+    
+    # Populate the filesystem.
     makeRandomTree(fs, '/', 7, 2, CHUNK_SIZE * 16) # Total file size: (2^7)(16)(4096) = 8388608 bytes
-    mutateRandomTree(fs, '/', 7, 2, 128) # Make 128 random mutations.
-    # TODO do the merge and time it.
+    
+    # Make a clone of the filesystem.
+    fs2RootFile =  'benchmark/temp/fs_root_2.txt'
+    fs2 = dynamo_fs.DynamoFS(fs.server, fs2RootFile)
+    
+    # Mutate both copies with 128 random mutations.
+    mutateRandomTree(fs, '/', 7, 2, 128)
+    mutateRandomTree(fs2, '/', 7, 2, 128)
+    
+    # Merge the two filesystems back together.
+    key = fs.get_key_for_sharing('/')
+    
+    sampler.begin()
+    fs2.merge_with_shared_key('/', key)
+    sampler.end()
+    
+    return sampler
+
     
 if __name__ == '__main__':
     runLocalBenchmarks()
