@@ -11,56 +11,69 @@ BENCH_TYPES = ['seqwrite', 'seqread', 'randwrite', 'randread'];
 
 # We rad all the data into a table with the following columns.
 COLUMNS = ['timestamp', 'benchType', 'backend', 'depth', 'fileSize',
-           'readUnits', 'writeUnits', 'latency'];
+           'readUnits', 'writeUnits', 'latency', 'pageSize'];
 
 # Read data into the table.
 table = []
 homes = ['dynamodb-ec2', 's3-ec2'] # Load data from two directories.
 csvFields = ["benchType", "backend", "depth", "fileSize", "latency"]
 
+pageSizePattern = re.compile(r"page(\d+)")
 dynPattern = re.compile(r"(\d+)-r(\d+)-w(\d+).csv")
 s3Pattern = re.compile(r"(\d+).csv")
 
 for home in homes:
-    for f in os.listdir(home):
-        matches = dynPattern.match(f)
-        if matches is not None:
-            benchType = 'dynamodb'
-        else:
-            matches = s3Pattern.match(f)
+    # Inside each home are folders for different page sizes.
+    for p in os.listdir(home):
+        matches = pageSizePattern.match(p)
+        pageSize = int(matches.group(1))        
+    
+        for f in os.listdir(p):
+            matches = dynPattern.match(f)
             if matches is not None:
-                benchType = 's3'
+                benchType = 'dynamodb'
             else:
-                benchType = None
-        
-        if benchType is not None:
-            timestamp = int(matches.group(1))
+                matches = s3Pattern.match(f)
+                if matches is not None:
+                    benchType = 's3'
+                else:
+                    benchType = None
             
-            if benchType == 'dynamodb':
-                readUnits = int(matches.group(2))
-                writeUnits = int(matches.group(3))
-            else:
-                # Put in dummy values for S3, since S3 is not provisioned.
-                readUnits = 0
-                writeUnits = 0
-            
-            csvReader = csv.DictReader(open(home + '/' + f, 'r'), csvFields)
-            for csvLine in csvReader:
-                # Build a record for the table.
-                record = [timestamp,
-                          csvLine['benchType'],
-                          csvLine['backend'],
-                          int(csvLine['depth']),
-                          int(csvLine['fileSize']),
-                          readUnits,
-                          writeUnits,
-                          float(csvLine['latency'])
-                          ]
-                table.append(record)
+            if benchType is not None:
+                timestamp = int(matches.group(1))
+                
+                if benchType == 'dynamodb':
+                    readUnits = int(matches.group(2))
+                    writeUnits = int(matches.group(3))
+                else:
+                    # Put in dummy values for S3, since S3 is not provisioned.
+                    readUnits = 0
+                    writeUnits = 0
+                
+                csvReader = csv.DictReader(open(home + '/' + f, 'r'), csvFields)
+                for csvLine in csvReader:
+                    # Build a record for the table.
+                    record = [timestamp,
+                              csvLine['benchType'],
+                              csvLine['backend'],
+                              int(csvLine['depth']),
+                              int(csvLine['fileSize']),
+                              readUnits,
+                              writeUnits,
+                              float(csvLine['latency']),
+                              pageSize
+                              ]
+                    table.append(record)
 
 
 # Filters the data, producing an arbitrary subset of records.
-def filter(table, timestamp=None, benchType=None, readUnits=None, writeUnits=None, backend=None):
+def filter(table,
+           timestamp=None,
+           benchType=None,
+           readUnits=None,
+           writeUnits=None,
+           backend=None,
+           pageSize=None):
     measurements = []
     for record in table:
         if timestamp is not None and timestamp != record[0]:
@@ -72,6 +85,8 @@ def filter(table, timestamp=None, benchType=None, readUnits=None, writeUnits=Non
         if readUnits is not None and readUnits != record[5]:
             continue
         if writeUnits is not None and writeUnits != record[6]:
+            continue
+        if pageSize is not None and pageSize != record[8]:
             continue
         measurements.append(record)
     return measurements

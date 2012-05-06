@@ -1,6 +1,5 @@
-# Current provisioning.
+PAGESIZE=4096
 TIME=`date +%s`
-DUMP=${TIME}.csv
+DUMP=benchmark/data/s3-ec2/page${PAGESIZE}/${TIME}.csv
 
-python benchmark/s3_benchmark.py > benchmark/data/s3-ec2/$DUMP
-
+python benchmark/s3_benchmark.py > $DUMP
