@@ -141,19 +141,22 @@ class DynamoFS:
         tmp_blob = blob.DirectoryBlob(key, self.cntl, target.parent, False)
         self._merge_with_blob(_get_leaf_filename(path), target, tmp_blob)
 
-    def _output_whole_tree(self, node, level):
+    def _output_whole_tree(self, node, level, suppressFileContents=False):
         if isinstance(node, blob.DirectoryBlob):
             for filename in node.keys():
                 print "\t" * level + filename + " (" + node[filename].key[0:5] + ")"
                 self._output_whole_tree(node[filename], level + 1)
         elif isinstance(node, blob.BlockListBlob):
-            print "\t" * level + "".join([block.data_as_string() for block in node.children]) + \
+            if suppressFileContents:
+                print "(" + node.key[0:5] + ")"
+            else:
+                print "\t" * level + "".join([block.data_as_string() for block in node.children]) + \
                     " (" + node.key[0:5] + ")"
 
-    def debug_output_whole_tree(self):
+    def debug_output_whole_tree(self, suppressFileContents = False):
         print "---------------------------- WHOLE TREE -----------------"
 #        self.root.commit()
-        self._output_whole_tree(self.root, 0)
+        self._output_whole_tree(self.root, 0, suppressFileContents=suppressFileContents)
         print "---------------------------- END -----------------"
 
     def flush(self):
