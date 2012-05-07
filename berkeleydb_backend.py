@@ -6,8 +6,12 @@ import os
 # the DB, we encode reference counts as decimal strings prepended to the value
 # string and separated by a tilde character.
 class BerkeleyDBBackend:
+    
     # filename is a local file where this data will be persisted.
     def __init__(self, filename):
+        self.bytesPut = 0
+        self.bytesGotten = 0
+        
         self.filename = filename
         try:
             self.kvstore = bsddb.hashopen(self.filename)
@@ -19,10 +23,15 @@ class BerkeleyDBBackend:
                 pass
             self.kvstore = bsddb.hashopen(self.filename)
             
+    def resetCounters(self):
+        self.bytesPut = 0
+        self.bytesGotten = 0
+            
     def __del__(self):
         self.kvstore.close()
 
     def put(self, key, value):
+        self.bytesPut += len(value)
         try:
             self.incRefCount(key)
         except KeyError:
@@ -31,6 +40,7 @@ class BerkeleyDBBackend:
 
     def get(self, key):
         (_, _, value) = self.kvstore[key].partition('~')
+        self.bytesGotten += len(value)
         return value
 
     # Changes the reference count in a record string loaded from the DB.
