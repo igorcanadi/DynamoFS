@@ -164,6 +164,8 @@ def graphBackendComparison(pageSize):
     ax.get_xaxis().set_major_formatter(fmt)
     ax.set_ylabel("Sequential block write latency (s)")
     ax.set_xlabel("Provisioned write units")
+    ax.get_yaxis().grid(color='gray', linestyle='dashed')
+    ax.get_yaxis().set_major_locator(ticker.MaxNLocator(15))
     title('Page Size = %d' % pageSize)
     
     pylab.show()
@@ -193,6 +195,8 @@ def graphPageSizeComparison(backend, writeUnits):
     ax.get_xaxis().set_major_formatter(fmt)
     ax.set_ylabel("Sequential block write latency (s)")
     ax.set_xlabel("Page size (B)")
+    ax.get_yaxis().grid(color='gray', linestyle='dashed')
+    ax.get_yaxis().set_major_locator(ticker.MaxNLocator(15))
     if backend == 's3':
         title('Backend: S3')
     else:
@@ -202,5 +206,5 @@ def graphPageSizeComparison(backend, writeUnits):
 
 
 # Code to run for this script:
-graphPageSizeComparison('s3', 0)
-#graphBackendComparison(4096)
+#graphPageSizeComparison('dynamodb', 10)
+graphBackendComparison(4096)
