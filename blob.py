@@ -391,7 +391,7 @@ class BlockBlob(Blob):
         """
         if len(self.data) < index + len(value):
             self.data.extend([0 for i in range(index + len(value) - len(self.data))])
-        self.data[index:(index + len(value))] = array("B", value)
+        self.data[index:(index + len(value))] = value
 
     @validate
     def read(self, index, size):

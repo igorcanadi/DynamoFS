@@ -78,7 +78,8 @@ def main():
         "time",
     ]
     reader = csv.DictReader(open(dfs_filename, 'r'), fieldnames = dfs_fieldnames)
-    data_dfs = [row for row in reader]
+    data_dfs = [row for row in reader if row['benchtype'] == 'seqwrite' and row['fstype'] == 'berkeleydb']
+    print "\n".join(map(str, data_dfs))
     data_dfs = [(float(size), float(time)) for (size, time) in getAverages(data_dfs).items()]
 
     font = {
