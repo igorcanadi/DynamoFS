@@ -15,19 +15,9 @@ def plotThroughput(data, filename):
     fig = plt.figure(figsize = (8, 4), dpi = 600)
     ax = fig.add_subplot(111)
     barwidth = 0.8
-    rects = list()
-#    colors = ['r', 'g', 'y', 'b']
     xlabels = map(lambda x: float(x[0]) / 10**6, data)
-#    for i in range(len(data)):
-#        toPlot = map(lambda x: float(x[0]) / 10**6 / float(x[1]) , data[i])
-#        rects.append(ax.bar(
-#            ind + i * barwidth,
-#            toPlot,
-#            width = barwidth,
-#            color = colors[i % len(colors)],
-#        ))
 
-    rect = ax.bar(
+    ax.bar(
         ind,
         [i[0] / 10**6 / i[1] for i in data],
         width = barwidth,
@@ -50,7 +40,7 @@ def plotSpeedup(data_raw, data_dfs, filename):
     data_raw = [i[1] for i in data_raw]
     data_dfs = [i[1] for i in data_dfs]
 
-    rect = ax.bar(
+    ax.bar(
         ind,
         [data_raw[i] / data_dfs[i] for i in range(len(data_raw))],
         width = barwidth,
