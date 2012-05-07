@@ -57,7 +57,7 @@ def makeDepth(fs, root, n):
 def randomArray(length, rangeMin = 32, rangeMax = 126):
     ar = array('B')
     for _ in range(0, length):
-        ar.expand(random.randint(rangeMin, rangeMax))
+        ar.append(random.randint(rangeMin, rangeMax))
     return ar
 
 # Generates a random string of printable ASCII. Optionally, a sub-range of
