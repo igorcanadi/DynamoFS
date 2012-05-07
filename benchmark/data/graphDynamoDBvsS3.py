@@ -134,7 +134,7 @@ def condense(xCoords, yCoords):
 # comparison is user-supplied.
 def graphBackendComparison(pageSize):
     # Do analysis using random write numbers.
-    benchType = 'randwrite'
+    benchType = 'seqwrite'
     
     dynData = filter(table,
                      benchType=benchType,
@@ -174,7 +174,7 @@ def graphBackendComparison(pageSize):
 # the same backend.
 def graphPageSizeComparison(backend, writeUnits):
     # Do analysis using random write numbers.
-    benchType = 'randwrite'
+    benchType = 'seqwrite'
     
     data = filter(table,
                   benchType=benchType,
@@ -206,5 +206,5 @@ def graphPageSizeComparison(backend, writeUnits):
 
 
 # Code to run for this script:
-#graphPageSizeComparison('dynamodb', 10)
-graphBackendComparison(4096)
+graphPageSizeComparison('dynamodb', 1280)
+#graphBackendComparison(4096)
