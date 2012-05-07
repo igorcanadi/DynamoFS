@@ -14,7 +14,7 @@ import csv
 
 def printUsage():
     print """\
-Usage: %s <csv file name> <svg file name>\
+Usage: %s <csv file name> <svg file name for local> <svg file name for bdb>\
 """ % sys.argv[0]
 
 """
@@ -32,13 +32,6 @@ types = {
     ("randwrite", "berkeleydb") : "Random write",
     ("randread", "berkeleydb") : "Random read",
 }
-
-legendStrings = [
-    "Sequential write",
-    "Sequential read",
-    "Random write",
-    "Random read",
-]
 
 def sortByType(data):
     """
@@ -98,8 +91,33 @@ def sortedTuples(data):
     """
     return sorted(data.items(), lambda x, y: int(x[0]) - int(y[0]))
 
+def plot(data, filename, legendStrings):
+    ind = np.arange(20) + 0.1
+    fig = plt.figure(figsize = (8, 4), dpi = 600)
+    ax = fig.add_subplot(111)
+    barwidth = 0.8 / len(data)
+    rects = list()
+    colors = ['r', 'g', 'y', 'b']
+    xlabels = map(lambda x: float(x[0]) / 10**6, sortedTuples(getAverages(data[0])))[1::2]
+    print xlabels
+    for i in range(len(data)):
+        toPlot = map(lambda x: float(x[0]) / 10**6 / x[1] , sortedTuples(getAverages(data[i])))
+        rects.append(ax.bar(
+            ind + i * barwidth,
+            toPlot,
+            width = barwidth,
+            color = colors[i % len(colors)],
+        ))
+
+    ax.set_xticks((ind + barwidth * 2)[1::2])
+    ax.set_xticklabels(xlabels)
+    ax.set_ylabel("Throughput (MB/s)")
+    ax.set_xlabel("File size (MB)")
+    ax.legend(rects, legendStrings, loc="best", prop={'size':6})
+    plt.savefig(filename)
+
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         printUsage()
         sys.exit(1)
 
@@ -113,30 +131,16 @@ def main():
     ]
     reader = csv.DictReader(open(filename, 'r'), fieldnames = fieldnames)
 
-    data = sortByType(reader)
-    ind = np.arange(20) + 0.1
-    fig = plt.figure(figsize = (8, 4), dpi = 600)
-    ax = fig.add_subplot(111)
-    barwidth = 0.2
-    rects = list()
-    colors = ['r', 'g', 'y', 'b']
-    xlabels = map(lambda x: float(x[0]) / 10**6, sortedTuples(getAverages(data[0])))[1::2]
-    print xlabels
-    for i in range(4):
-        toPlot = map(lambda x: float(x[0]) / x[1] / 10**6, sortedTuples(getAverages(data[i + 4])))
-        rects.append(ax.bar(
-            ind + i * barwidth,
-            toPlot,
-            width = barwidth,
-            color = colors[i],
-        ))
+    legendStrings = [
+        "Sequential write",
+        "Sequential read",
+        "Random write",
+        "Random read",
+    ]
 
-    ax.set_xticks((ind + barwidth * 2)[1::2])
-    ax.set_xticklabels(xlabels)
-    ax.set_ylabel("Throughput (MB)")
-    ax.set_xlabel("File size (MB)")
-    ax.legend(rects, legendStrings, loc="best")
-    plt.savefig(sys.argv[2])
+    data = sortByType(reader)
+    plot(data[:4], sys.argv[2], legendStrings)
+    plot(data[4:], sys.argv[3], legendStrings)
 
 if __name__ == '__main__':
     main()
