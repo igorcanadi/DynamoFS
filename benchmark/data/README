@@ -1,0 +1,11 @@
+Graphs in this directory:
+
+
+jimsmac.5mb.bdb.svg
+	Average throughput over 10 trials of running DFS with BDB backend on Jim's Mac. Up to 5 MB.
+jimsmac.5mb.local.svg
+	Average throughput over 10 trials of running LocalFS on Jim's Mac. Up to 5 MB.
+rawbdb.speedup.svg
+	Average speedup over 10 trials of running DynamoFS over BDB vs. just adding a bunch of random data to BDB. Up to 5 MB.
+rawbdb.throughput.svg
+	Average throughput of just adding a bunch of random data to BDB. Up to 5 MB.

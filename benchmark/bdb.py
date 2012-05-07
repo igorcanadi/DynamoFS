@@ -22,15 +22,16 @@ def main():
         numTrials = int(sys.argv[2])
     for size in range(maxSize, 0, -maxSize / 20):
         for trial in range(numTrials):
-            db = bsddb.hashopen("bdb.db")
             totalWritten = 0
+            db = bsddb.hashopen("bdb.db")
             beginTime = time.time()
             for block in range((size + PAGE_SIZE - 1) / PAGE_SIZE):
                 toWrite = min(PAGE_SIZE, size - totalWritten)
                 string = semirandomString(toWrite)
-                hash = hashlib.sha512(string).hexdigest()
+                hash = hashlib.sha512(str(trial)).hexdigest()
                 db[hash] = string
                 totalWritten += toWrite
+            db.sync()
             db.close()
             endTime = time.time()
             delta = endTime - beginTime
