@@ -24,6 +24,7 @@ def randPos(fileSize):
 
 # rand - True for random writes, false for sequential writes.
 def write(fs, filename, fileSize, sampler, rand):
+    string = benchmark_utils.semirandomArray(CHUNK_SIZE)
     sampler.begin()
     f = fs.open(filename, 'w')
 
@@ -33,9 +34,9 @@ def write(fs, filename, fileSize, sampler, rand):
             f.seek(randPos(fileSize), file.SEEK_SET)
 
         if f.stringOptimized:
-            f.write(benchmark_utils.semirandomString(CHUNK_SIZE))
+            f.write(string)
         else:
-            f.write_array(benchmark_utils.semirandomArray(CHUNK_SIZE))
+            f.write_array(string)
         bytesLeft -= CHUNK_SIZE
 
     f.close()
@@ -254,10 +255,10 @@ def runLocalFS(depth, fileSize, numTrials = 10):
 
 def runLocalBenchmarks(numTrials=10, maxSize=500000):
     for fileSize in range(maxSize, 0,  -maxSize / 20):
-        print >> sys.stderr, "Running LocalFS, file size %s" % fileSize
-        print "\n".join(
-            [",".join(map(str, row)) for row in runLocalFS(3, fileSize, numTrials)]
-        )
+#        print >> sys.stderr, "Running LocalFS, file size %s" % fileSize
+#        print "\n".join(
+#            [",".join(map(str, row)) for row in runLocalFS(3, fileSize, numTrials)]
+#        )
         print >> sys.stderr, "Running BerkeleyDB, file size %s" % fileSize
         print "\n".join(
             [",".join(map(str, row)) for row in runBerkeleyDB(3, fileSize, numTrials)]
