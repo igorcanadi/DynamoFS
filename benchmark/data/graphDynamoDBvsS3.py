@@ -206,5 +206,5 @@ def graphPageSizeComparison(backend, writeUnits):
 
 
 # Code to run for this script:
-graphPageSizeComparison('dynamodb', 1280)
-#graphBackendComparison(4096)
+#graphPageSizeComparison('s3', 0)
+graphBackendComparison(4096)
