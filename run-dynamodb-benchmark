@@ -1,9 +1,15 @@
-# Current provisioning.
-R=1280
-W=640
-PAGESIZE=4096
-TIME=`date +%s`
+#!/bin/sh
 
-DUMP=benchmark/data/dynamodb-ec2/page${PAGESIZE}/${TIME}-r${R}-w${W}.csv
+. ./provisioning
 
-python benchmark/dynamodb_benchmark.py > $DUMP
+PAGESIZE=`python -c "import blob; import file; print file.PAGE_SIZE"`
+
+for TRIAL in 1 2 3
+do
+	TIME=`date +%s`
+	DUMP=benchmark/data/dynamodb-ec2/page${PAGESIZE}/${TIME}-r${R}-w${W}.csv
+	python benchmark/dynamodb_benchmark.py > $DUMP
+
+	# Sleep for three minutes to let DynamoDB recover.
+	sleep 60 60 60
+done

@@ -1,5 +1,12 @@
-PAGESIZE=4096
-TIME=`date +%s`
-DUMP=benchmark/data/s3-ec2/page${PAGESIZE}/${TIME}.csv
+#!/bin/sh
 
-python benchmark/s3_benchmark.py > $DUMP
+PAGESIZE=`python -c "import blob; import file; print file.PAGE_SIZE"`
+
+for TRIAL in 1 2 3
+do
+	TIME=`date +%s`
+	DUMP=benchmark/data/s3-ec2/page${PAGESIZE}/${TIME}.csv
+	python benchmark/s3_benchmark.py > $DUMP
+
+	sleep 60 60 60 # Sleep 3 minutes to let S3 recover.
+done
