@@ -1,2 +1,2 @@
 #!/bin/sh
-ssh ec2-user@ec2-107-20-96-187.compute-1.amazonaws.com 
+ssh ec2-user@ec2-107-20-96-187.compute-1.amazonaws.com -i ~/.ssh/deckard.pem 
