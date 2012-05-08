@@ -15,7 +15,7 @@
    height="2700"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.2 r9819"
+   inkscape:version="0.48.1 r9760"
    sodipodi:docname="poster.svg"
    inkscape:export-filename="/Users/igor/DynamoFS/alma/poster.png"
    inkscape:export-xdpi="250"
@@ -190,17 +190,17 @@
      borderopacity="1.0"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.36361111"
-     inkscape:cx="2596.3678"
-     inkscape:cy="671.91806"
+     inkscape:zoom="0.25711188"
+     inkscape:cx="1876.3744"
+     inkscape:cy="1385.9481"
      inkscape:document-units="in"
-     inkscape:current-layer="layer3"
+     inkscape:current-layer="layer1"
      showgrid="true"
-     inkscape:window-width="1440"
-     inkscape:window-height="731"
+     inkscape:window-width="1600"
+     inkscape:window-height="1002"
      inkscape:window-x="0"
      inkscape:window-y="0"
-     inkscape:window-maximized="0"
+     inkscape:window-maximized="1"
      units="in"
      width="30in"
      objecttolerance="10000"
@@ -260,7 +260,7 @@
          id="tspan3028"
          x="500"
          y="-1497.6405"
-         style="font-size:120px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#2e2633;font-family:Trebuchet MS;-inkscape-font-specification:Trebuchet MS">DynamoFS - Filesystem on top of Key-Value store</tspan></text>
+         style="font-size:120px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#2e2633;font-family:Trebuchet MS;-inkscape-font-specification:Trebuchet MS">DynamoFS: A Filesystem on Top of a Key-Value Store</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#2e2633;fill-opacity:1;stroke:none;font-family:Andale Mono;-inkscape-font-specification:Andale Mono"
@@ -358,7 +358,8 @@
      inkscape:groupmode="layer"
      id="layer3"
      inkscape:label="Content"
-     style="stroke-linecap:square;stroke-linejoin:round;display:inline">
+     style="stroke-linecap:square;stroke-linejoin:round;display:inline"
+     sodipodi:insensitive="true">
     <text
        sodipodi:linespacing="125%"
        id="text5339"
@@ -814,14 +815,16 @@
          y="1600"
          style="font-size:75px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Trebuchet MS;-inkscape-font-specification:Trebuchet MS">Evaluation</tspan></text>
     <g
-       id="g13610">
+       id="g13610"
+       style="stroke-linecap:square;stroke-linejoin:round">
       <path
          id="path3185-3"
          d="m 1950,1650 550,0 0,634.3011 -550,0 z"
          inkscape:connector-curvature="0"
-         style="fill:#efffcd;stroke:url(#linearGradient13585);stroke-width:8.80002784999999932;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none" />
+         style="fill:#efffcd;stroke:url(#linearGradient13585);stroke-width:8.80002785;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none" />
       <g
-         id="g13587">
+         id="g13587"
+         style="stroke-linecap:square;stroke-linejoin:round">
         <path
            style="fill:#dce9be;fill-rule:nonzero;stroke:#2e2633;stroke-width:8.81999969;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none"
            inkscape:connector-curvature="0"
@@ -941,9 +944,11 @@
          x="1657.9792"
          y="1435.5814" /></text>
     <g
-       id="g15209">
+       id="g15209"
+       style="stroke-linecap:square;stroke-linejoin:round">
       <g
-         id="g15159">
+         id="g15159"
+         style="stroke-linecap:square;stroke-linejoin:round">
         <path
            style="fill:#dce9be;fill-rule:nonzero;stroke:#2e2633;stroke-width:2.11267734;stroke-linecap:butt;stroke-linejoin:round"
            inkscape:connector-curvature="0"
