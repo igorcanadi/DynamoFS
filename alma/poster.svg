@@ -15,7 +15,7 @@
    height="2700"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.1 r9760"
+   inkscape:version="0.48.2 r9819"
    sodipodi:docname="poster.svg"
    inkscape:export-filename="/Users/igor/DynamoFS/alma/poster.png"
    inkscape:export-xdpi="250"
@@ -190,14 +190,14 @@
      borderopacity="1.0"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.25711188"
-     inkscape:cx="1876.3744"
-     inkscape:cy="1385.9481"
+     inkscape:zoom="0.51422376"
+     inkscape:cx="675.56677"
+     inkscape:cy="600.25857"
      inkscape:document-units="in"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="layer3"
      showgrid="true"
-     inkscape:window-width="1600"
-     inkscape:window-height="1002"
+     inkscape:window-width="1440"
+     inkscape:window-height="769"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
@@ -252,46 +252,46 @@
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#2e2633;fill-opacity:1;stroke:none;font-family:Andale Mono;-inkscape-font-specification:Andale Mono"
-       x="500"
+       x="399.55078"
        y="-1497.6405"
        id="text3026"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan3028"
-         x="500"
+         x="399.55078"
          y="-1497.6405"
          style="font-size:120px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#2e2633;font-family:Trebuchet MS;-inkscape-font-specification:Trebuchet MS">DynamoFS: A Filesystem on Top of a Key-Value Store</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#2e2633;fill-opacity:1;stroke:none;font-family:Andale Mono;-inkscape-font-specification:Andale Mono"
-       x="500"
+       x="436.28906"
        y="-1347.6405"
        id="text2991"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan2993"
-         x="500"
+         x="436.28906"
          y="-1347.6405"
          style="font-size:80px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#2e2633;font-family:Arial;-inkscape-font-specification:Arial">Igor Canadi, James Paton, Seth Pollen</tspan><tspan
          sodipodi:role="line"
-         x="500"
+         x="436.28906"
          y="-1247.6405"
          style="font-size:80px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#2e2633;font-family:Arial;-inkscape-font-specification:Arial"
          id="tspan2995">{canadi, paton, pollen} @ cs.wisc.edu</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#2e2633;fill-opacity:1;stroke:none;font-family:Andale Mono;-inkscape-font-specification:Andale Mono"
-       x="2000"
+       x="1936.2891"
        y="-1347.6405"
        id="text3021"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan3023"
-         x="2000"
+         x="1936.2891"
          y="-1347.6405"
          style="font-size:80px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#2e2633;font-family:Arial;-inkscape-font-specification:Arial">University of Wisconsin-Madison</tspan><tspan
          sodipodi:role="line"
-         x="2000"
+         x="1936.2891"
          y="-1247.6405"
          id="tspan3025"
          style="font-size:80px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#2e2633;font-family:Arial;-inkscape-font-specification:Arial">Department of Computer Sciences</tspan></text>
@@ -358,8 +358,7 @@
      inkscape:groupmode="layer"
      id="layer3"
      inkscape:label="Content"
-     style="stroke-linecap:square;stroke-linejoin:round;display:inline"
-     sodipodi:insensitive="true">
+     style="stroke-linecap:square;stroke-linejoin:round;display:inline">
     <text
        sodipodi:linespacing="125%"
        id="text5339"
@@ -1981,7 +1980,7 @@
        transform="matrix(1.25,0,0,1.25,143.35251,1647.759)" />
     <g
        id="g9648"
-       transform="matrix(0.71051413,0,0,0.71051413,138.09858,522.22495)"
+       transform="matrix(0.71051413,0,0,0.71051413,251.69859,622.22495)"
        style="stroke-linecap:square;stroke-linejoin:round">
       <g
          transform="matrix(1.25,0,0,1.25,143.35251,1647.759)"
@@ -5433,7 +5432,7 @@
     <g
        id="g13259"
        style="stroke-linecap:square;stroke-linejoin:round"
-       transform="translate(54,-32.916407)">
+       transform="translate(195,95)">
       <g
          transform="matrix(1.25,0,0,1.25,960,1710)"
          style="fill:#dce9be;stroke-linecap:square;stroke-linejoin:round"
@@ -7090,5 +7089,22 @@
         </g>
       </g>
     </g>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Andale Mono;-inkscape-font-specification:Andale Mono"
+       x="302"
+       y="1700"
+       id="text4243"
+       sodipodi:linespacing="125%"><tspan
+         id="tspan4257"
+         sodipodi:role="line"
+         x="302"
+         y="1700"
+         style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Trebuchet MS;-inkscape-font-specification:Trebuchet MS">- metadata overhead of 11.8% on depth 3</tspan><tspan
+         sodipodi:role="line"
+         x="302"
+         y="1740"
+         style="font-size:32px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Trebuchet MS;-inkscape-font-specification:Trebuchet MS"
+         id="tspan4290">- run on EC2 t1.micro instance</tspan></text>
   </g>
 </svg>
