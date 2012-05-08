@@ -26,6 +26,9 @@ for home in homes:
     # Inside each home are folders for different page sizes.
     for p in os.listdir(home):
         matches = pageSizePattern.match(p)
+        if matches is None:
+            continue # Skip this file.
+        
         pageSize = int(matches.group(1))        
     
         for f in os.listdir(home + '/' + p):
@@ -162,7 +165,7 @@ def graphBackendComparison(pageSize):
     fmt = ticker.FixedFormatter(['S3'] + map(str, dynXData))
     ax = gca()
     ax.get_xaxis().set_major_formatter(fmt)
-    ax.set_ylabel("Sequential block write latency (s)")
+    ax.set_ylabel("Sequential 4K block write latency (s)")
     ax.set_xlabel("Provisioned write units")
     ax.get_yaxis().grid(color='gray', linestyle='dashed')
     ax.get_yaxis().set_major_locator(ticker.MaxNLocator(15))
@@ -193,7 +196,7 @@ def graphPageSizeComparison(backend, writeUnits):
     fmt = ticker.FixedFormatter(map(str, xData))
     ax = gca()
     ax.get_xaxis().set_major_formatter(fmt)
-    ax.set_ylabel("Sequential block write latency (s)")
+    ax.set_ylabel("Sequential 4K block write latency (s)")
     ax.set_xlabel("Page size (B)")
     ax.get_yaxis().grid(color='gray', linestyle='dashed')
     ax.get_yaxis().set_major_locator(ticker.MaxNLocator(15))
@@ -206,5 +209,5 @@ def graphPageSizeComparison(backend, writeUnits):
 
 
 # Code to run for this script:
-#graphPageSizeComparison('s3', 0)
-graphBackendComparison(4096)
+graphPageSizeComparison('dynamodb', 1280)
+#graphBackendComparison(4096)
