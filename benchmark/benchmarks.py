@@ -273,26 +273,52 @@ def main():
         runLocalBenchmarks()
 
 # Benchmarks the merge call.
-def merge(fs, fsRootFile):
+def merge(fs, fsRootFile, mutations, depth, fanout):
     sampler = benchmark_utils.BenchmarkTimer()
     
     # Populate the filesystem.
     fs.mkdir('/', '_')
-    makeRandomTree(fs, '/_', 7, 2, CHUNK_SIZE * 16) # Total file size: (2^7)(16)(4096) = 8388608 bytes
+    makeRandomTree(fs, '/_', depth, fanout, CHUNK_SIZE * 3) # Total file size: (2^7)(16)(4096) = 8388608 bytes
     
     # Make a clone of the filesystem, first copying the root-file directory.
     shutil.copy(fsRootFile, fsRootFile + '.copy')
     fs2 = dynamo_fs.DynamoFS(fs.get_backend(), fsRootFile + '.copy')
 
     # Mutate both copies with 128 random mutations.
-    mutateRandomTree(fs, '/_', 7, 2, 128)
-    mutateRandomTree(fs2, '/_', 7, 2, 128)
+    mutateRandomTree(fs, '/_', depth, fanout, mutations)
+    mutateRandomTree(fs2, '/_', depth, fanout, mutations)
     
     # Merge the two filesystems back together.
     key = fs.get_key_for_sharing('/_')
     
     sampler.begin()
     fs2.merge_with_shared_key('/_', key)
+    fs2.cleanup()
+    sampler.end()
+    
+    return sampler
+
+# Benchmarks the merge call.
+def mergeLocal(fs, localfsroot, localfs2root, mutations, depth, fanout):
+    sampler = benchmark_utils.BenchmarkTimer()
+    
+    from local_fs import LocalFS
+
+    # Populate the filesystem.
+    fs.mkdir('/', '_')
+    makeRandomTree(fs, '/_', depth, fanout, CHUNK_SIZE * 3) # Total file size: (2^7)(16)(4096) = 8388608 bytes
+    
+    # Make a clone of the filesystem, first copying the root-file directory.
+    shutil.copytree(localfsroot, localfs2root)
+    fs2 = LocalFS(localfs2root)
+
+    # Mutate both copies with 128 random mutations.
+    mutateRandomTree(fs, '/_', depth, fanout, mutations)
+    mutateRandomTree(fs2, '/_', depth, fanout, mutations)
+    
+    import subprocess
+    sampler.begin()
+    subprocess.check_output('cp -r %s/* %s' % (localfs2root, localfsroot), shell=True)
     sampler.end()
     
     return sampler
