@@ -84,6 +84,15 @@ def semirandomString(length, rangeMin = 32, rangeMax = 126):
 def semirandomArray(length, rangeMin = 32, rangeMax = 126):
     return array('B', [random.randint(rangeMin, rangeMax)] * length)
 
+# Randomly mutates one cell in a numeric array.
+def randomArrayMutate(arr, rangeMin = 32, rangeMax = 126):
+    index = random.randint(0, len(arr) - 1)
+    value = random.randint(rangeMin, rangeMax)
+    while arr[index] == value
+        index = random.randint(0, len(arr) - 1)
+        value = random.randint(rangeMin, rangeMax)
+    arr[index] = value
+
 # Takes in a list of tuples (or a list of lists) and prints it out to stdout
 # in a CSV format.
 def printCsv(data):

@@ -37,6 +37,7 @@ def write(fs, filename, fileSize, sampler, rand):
         if f.stringOptimized:
             f.write(string)
         else:
+            benchmark_utils.randomArrayMutate(array)
             f.write_array(array)
         bytesLeft -= CHUNK_SIZE
 
