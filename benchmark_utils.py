@@ -88,7 +88,7 @@ def semirandomArray(length, rangeMin = 32, rangeMax = 126):
 def randomArrayMutate(arr, rangeMin = 32, rangeMax = 126):
     index = random.randint(0, len(arr) - 1)
     value = random.randint(rangeMin, rangeMax)
-    while arr[index] == value
+    while arr[index] == value:
         index = random.randint(0, len(arr) - 1)
         value = random.randint(rangeMin, rangeMax)
     arr[index] = value

@@ -9,6 +9,8 @@ class BerkeleyDBBackend:
     # filename is a local file where this data will be persisted.
     def __init__(self, filename):
         self.filename = filename
+        self.bytesPut = 0
+        self.bytesGotten = 0
         try:
             self.kvstore = bsddb.hashopen(self.filename)
         except:
@@ -23,6 +25,7 @@ class BerkeleyDBBackend:
         self.kvstore.close()
 
     def put(self, key, value):
+        self.bytesPut += len(value)
         try:
             self.incRefCount(key)
         except KeyError:
@@ -31,6 +34,7 @@ class BerkeleyDBBackend:
 
     def get(self, key):
         (_, _, value) = self.kvstore[key].partition('~')
+        self.bytesGotten += len(value)
         return value
 
     # Changes the reference count in a record string loaded from the DB.
