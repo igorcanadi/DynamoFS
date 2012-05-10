@@ -13,6 +13,8 @@ class BerkeleyDBBackend:
         self.bytesGotten = 0
         
         self.filename = filename
+        self.bytesPut = 0
+        self.bytesGotten = 0
         try:
             self.kvstore = bsddb.hashopen(self.filename)
         except:

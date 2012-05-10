@@ -1,5 +1,5 @@
 #!/bin/sh
 # Current DynamoDB provisioning values.
-export R=5
-export W=5
+export R=20
+export W=20
 
