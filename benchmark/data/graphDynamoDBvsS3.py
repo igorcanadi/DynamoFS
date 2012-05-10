@@ -135,10 +135,7 @@ def condense(xCoords, yCoords):
 # Generates a graph comparing different backends (s3 and dynamodb) and
 # different provisioning levels (for dynamodb). THe page size to use for
 # comparison is user-supplied.
-def graphBackendComparison(pageSize):
-    # Do analysis using random write numbers.
-    benchType = 'seqwrite'
-    
+def graphBackendComparison(benchType, pageSize):
     dynData = filter(table,
                      benchType=benchType,
                      backend='dynamodb',
@@ -175,10 +172,7 @@ def graphBackendComparison(pageSize):
 
 # Generates a graph comparing performance using different page sizes for
 # the same backend.
-def graphPageSizeComparison(backend, writeUnits):
-    # Do analysis using random write numbers.
-    benchType = 'seqwrite'
-    
+def graphPageSizeComparison(benchType, backend, writeUnits):
     data = filter(table,
                   benchType=benchType,
                   backend=backend,
@@ -209,5 +203,5 @@ def graphPageSizeComparison(backend, writeUnits):
 
 
 # Code to run for this script:
-graphPageSizeComparison('dynamodb', 1280)
-#graphBackendComparison(4096)
+#graphPageSizeComparison('seqwrite', 'dynamodb', 1280)
+graphBackendComparison('randread', 4096)
