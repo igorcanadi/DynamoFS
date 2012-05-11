@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 __author__ = 'jpaton'
 
 from matplotlib import pyplot as plt
@@ -48,7 +49,11 @@ def main():
     print labels
     ax.legend(rects, labels)
 
-    plt.savefig("stacked.svg")
+    dpi = 60
+    plt.gcf().dpi = dpi
+    plt.gcf().set_size_inches(300 / dpi, 300 / dpi)
+
+    plt.savefig("stacked.png")
 
 if __name__ == '__main__':
     main()

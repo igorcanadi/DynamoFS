@@ -5,7 +5,7 @@ import os
 import re
 import pylab
 import matplotlib.ticker as ticker
-from matplotlib.pyplot import gca, title
+from matplotlib.pyplot import gca, title, savefig, clf, gcf
 
 BENCH_TYPES = ['seqwrite', 'seqread', 'randwrite', 'randread'];
 
@@ -136,6 +136,8 @@ def condense(xCoords, yCoords):
 # different provisioning levels (for dynamodb). THe page size to use for
 # comparison is user-supplied.
 def graphBackendComparison(benchType, pageSize):
+    clf()
+    
     dynData = filter(table,
                      benchType=benchType,
                      backend='dynamodb',
@@ -158,21 +160,40 @@ def graphBackendComparison(benchType, pageSize):
     # Merge the dynamodb and s3 datasets to they can be plotted in the same axes.
     yData = [s3YData] + dynYData
     pylab.boxplot(yData)
+
+    captions = {
+        'seqwrite': ('Sequential', 'write'),
+        'seqread':  ('Sequential', 'read'),
+        'randwrite':('Random', 'write'),
+        'randread': ('Random', 'read')
+    }
+    (order, direction) = captions[benchType]
+    
+    limits = {
+        'seqwrite': [0, 0.3],
+        'seqread':  [0, 0.075],
+        'randwrite':[0, 0.3],
+        'randread': [0, 0.075]
+    }
     
     fmt = ticker.FixedFormatter(['S3'] + map(str, dynXData))
     ax = gca()
     ax.get_xaxis().set_major_formatter(fmt)
-    ax.set_ylabel("Sequential 4K block write latency (s)")
-    ax.set_xlabel("Provisioned write units")
+    ax.set_ylabel(order + " 4K block " + direction + " latency (s)")
+    ax.set_xlabel("Provisioned read and write units")
     ax.get_yaxis().grid(color='gray', linestyle='dashed')
-    ax.get_yaxis().set_major_locator(ticker.MaxNLocator(15))
-    title('Page Size = %d' % pageSize)
-    
-    pylab.show()
+    ax.get_yaxis().set_major_locator(ticker.MaxNLocator(10))
+    title('Page Size = %dK' % (pageSize / 1024))
+    pylab.ylim(limits[benchType])
+    dpi = 60
+    gcf().dpi = dpi 
+    gcf().set_size_inches(400 / dpi, 300 / dpi) 
 
 # Generates a graph comparing performance using different page sizes for
 # the same backend.
 def graphPageSizeComparison(benchType, backend, writeUnits):
+    clf()
+    
     data = filter(table,
                   benchType=benchType,
                   backend=backend,
@@ -197,11 +218,13 @@ def graphPageSizeComparison(benchType, backend, writeUnits):
     if backend == 's3':
         title('Backend: S3')
     else:
-        title('Backend: DynamoDB; Write Units = %d' % writeUnits)
+        title('Backend: DynamoDB; Provisioning Units = %d' % writeUnits)
     
     pylab.show()
 
 
 # Code to run for this script:
 #graphPageSizeComparison('seqwrite', 'dynamodb', 1280)
-graphBackendComparison('randread', 4096)
+for b in BENCH_TYPES:
+    graphBackendComparison(b, 4096)
+    savefig(b + '.png')
