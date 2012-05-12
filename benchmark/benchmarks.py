@@ -15,6 +15,10 @@ import shutil
 # chunk size, for all benchmarks.
 CHUNK_SIZE = 4096
 
+# Generate some random data to read and write.
+STRING = benchmark_utils.randomString(CHUNK_SIZE)
+ARRAY = benchmark_utils.randomArray(CHUNK_SIZE)
+
 # Generates a random position to seek to in a file.
 def randPos(fileSize):
     if fileSize <= CHUNK_SIZE:
@@ -24,10 +28,11 @@ def randPos(fileSize):
 
 # rand - True for random writes, false for sequential writes.
 def write(fs, filename, fileSize, sampler, rand):
-    string = benchmark_utils.randomString(CHUNK_SIZE)
-    array = benchmark_utils.randomArray(CHUNK_SIZE)
     sampler.begin()
     f = fs.open(filename, 'w')
+    
+    if f.stringOptimized:
+        print 'WARNING: Data not being twiddled between blocks'
 
     bytesLeft = fileSize
     while bytesLeft > 0:
@@ -35,10 +40,10 @@ def write(fs, filename, fileSize, sampler, rand):
             f.seek(randPos(fileSize), file.SEEK_SET)
 
         if f.stringOptimized:
-            f.write(string)
+            f.write(STRING)
         else:
-            benchmark_utils.randomArrayMutate(array)
-            f.write_array(array)
+            benchmark_utils.randomArrayMutate(ARRAY)
+            f.write_array(ARRAY)
         bytesLeft -= CHUNK_SIZE
 
     f.close()
@@ -97,7 +102,7 @@ def makeRandomTree(fs, root, depth, fanout, fileSize):
             
 # Randomly mutates files in a tree created by makeRandomTree.
 def mutateRandomTree(fs, root, depth, fanout, numMutations):
-    for i in range(0, numMutations):
+    for _ in range(0, numMutations):
         # Create a random path.
         path = root
         for _ in range(0, depth + 1): # Add 1 to create the filename at the end of the directory string.
@@ -170,7 +175,7 @@ def runAllWithFs(fsClass, depth, fileSize, idstring, numTrials=10):
     filename = dynamo_fs.concatPath(cwd, 'the_file')
     fs.flush()
     results = list()
-    for i in range(numTrials):
+    for _ in range(numTrials):
         for bench in runAllWithFile(idstring):
             del fs
             fs = fsClass()

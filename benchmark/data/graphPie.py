@@ -3,20 +3,21 @@ __author__ = 'jpaton'
 
 from matplotlib import pyplot as plt
 import numpy as np
+import pylab
 
-s3_total = 14.881
+s3_total = 17.939
 s3_data = {
-    'get': 6.794,
-    'put': 6.104,
-    'construct' : 1.065,
+    'get': 7.708,
+    'put': 6.354,
+    'construct' : 1.282
 }
 s3_data['other'] = s3_total - sum(s3_data.values())
 
-dbd_total = 9.047
+dbd_total = 12.478
 dbd_data = {
-    'get': 5.439,
-    'put': 2.545,
-    'construct' : 0.120,
+    'get': 5.147,
+    'put': 4.493,
+    'construct' : 0.204
 }
 dbd_data['other'] = dbd_total - sum(dbd_data.values())
 
@@ -35,8 +36,8 @@ def main():
     width = 0.35
     offset = 0.13
     rects = list()
-    rects.append((ax.bar(ind + offset, others, width, color='y'), "Other"))
-    rects.append((ax.bar(ind + offset, constructs, width, color='g', bottom = others), "Constructors"))
+    rects.append((ax.bar(ind + offset, others, width, color='y'), "Python overheads"))
+    rects.append((ax.bar(ind + offset, constructs, width, color='g', bottom = others), "Connection setup"))
     rects.append((ax.bar(ind + offset, gets, width, color='r', bottom = map(sum, zip(others, constructs))), "Gets"))
     rects.append((ax.bar(ind + offset, puts, width, color='b', bottom = map(sum, zip(others, constructs, gets))), "Puts"))
     ax.set_xticklabels(['S3', 'DynamoDB'])
@@ -52,6 +53,7 @@ def main():
     dpi = 60
     plt.gcf().dpi = dpi
     plt.gcf().set_size_inches(300 / dpi, 300 / dpi)
+    pylab.ylim([0, 20])
 
     plt.savefig("stacked.png")
 
