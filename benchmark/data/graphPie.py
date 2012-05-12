@@ -5,19 +5,19 @@ from matplotlib import pyplot as plt
 import numpy as np
 import pylab
 
-s3_total = 17.939
+s3_total = 18.885
 s3_data = {
-    'get': 7.708,
-    'put': 6.354,
-    'construct' : 1.282
+    'get': 9.200,
+    'put': 5.906,
+    'construct' : 2.952
 }
 s3_data['other'] = s3_total - sum(s3_data.values())
 
-dbd_total = 12.478
+dbd_total = 13.257
 dbd_data = {
-    'get': 5.147,
-    'put': 4.493,
-    'construct' : 0.204
+    'get': 6.732,
+    'put': 5.592,
+    'construct' : 0.116
 }
 dbd_data['other'] = dbd_total - sum(dbd_data.values())
 
@@ -53,7 +53,7 @@ def main():
     dpi = 60
     plt.gcf().dpi = dpi
     plt.gcf().set_size_inches(300 / dpi, 300 / dpi)
-    pylab.ylim([0, 20])
+    pylab.ylim([0, 22])
 
     plt.savefig("stacked.png")
 
