@@ -1,5 +1,5 @@
 '''
-Standard benchmarking script for DynamoDB and S3 backends.
+Standard benchmarking script for S3 backend.
 '''
 import benchmarks
 from benchmark_utils import printCsv

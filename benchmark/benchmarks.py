@@ -206,7 +206,7 @@ def runBerkeleyDB(depth, fileSize, numTrials = 10):
 
     return runAllWithFs(fsClass, depth, fileSize, "berkeleydb", numTrials)
 
-# Runs all four benchmarks on BerkeleyDB.
+# Runs all four benchmarks on DynamoDB.
 def runDynamoDB(depth, fileSize, numTrials = 10):
     from dynamodb_backend import DynamoDBBackend
     
@@ -219,7 +219,25 @@ def runDynamoDB(depth, fileSize, numTrials = 10):
     
     return runAllWithFs(fsClass, depth, fileSize, "dynamodb", numTrials)
 
-# Runs all four benchmarks on BerkeleyDB.
+# Runs all four benchmarks on DynamoDB.
+def runDynamoDB_Depth(fileSize, maxDepth=15):
+    from dynamodb_backend import DynamoDBBackend
+    
+    fsRootFile =  'benchmark/temp/fs_root.txt'
+    ensureDelete(fsRootFile)
+
+    def fsClass():
+        backend = DynamoDBBackend()
+        return dynamo_fs.DynamoFS(backend, fsRootFile)
+    
+    NUM_TRIALS = 5
+    results = list()
+    
+    for depth in range(0, maxDepth + 1):
+        results.append(runAllWithFs(fsClass, depth, fileSize, "dynamodb", NUM_TRIALS))
+    return results
+
+# Runs all four benchmarks on SimpleDB.
 def runSimpleDB(depth, fileSize, numTrials = 10):
     from simpledb_backend import SimpleDBBackend
     
@@ -232,7 +250,7 @@ def runSimpleDB(depth, fileSize, numTrials = 10):
     
     return runAllWithFs(fsClass, depth, fileSize, "simpledb", numTrials)
 
-# Runs all four benchmarks on BerkeleyDB.
+# Runs all four benchmarks on S3.
 def runS3(depth, fileSize, numTrials = 10):
     from s3_backend import S3Backend
     
