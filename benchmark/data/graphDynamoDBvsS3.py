@@ -79,8 +79,12 @@ def filter(table,
            pageSize=None):
     measurements = []
     for record in table:
-        if timestamp is not None and timestamp != record[0]:
-            continue
+        if isinstance(timestamp, list):
+            if record[0] not in timestamp:
+                continue
+        else:
+            if timestamp is not None and timestamp != record[0]:
+                continue
         if benchType is not None and benchType != record[1]:
             continue
         if backend is not None and backend != record[2]:
@@ -223,8 +227,44 @@ def graphPageSizeComparison(benchType, backend, writeUnits):
     pylab.show()
 
 
+# Graphs a comparison of different depths based on a single timestamped
+# sample file that was taken on May 13, 2012.
+def graphDepthComparison(benchType):
+    clf()
+    
+    data = filter(table,
+                  timestamp=range(1336921433, 1336922429+1),
+                  benchType=benchType)
+    writeUnits = 160
+    
+    xData = project(data, 'depth')
+    yData = project(data, 'latency')
+    
+    print len(xData)
+    print len(yData)
+    
+    # Each sample represents 5 trials.
+    yData = map(lambda x:x/5, yData)
+    
+    (xData, yData) = condense(xData, yData)
+    
+    pylab.boxplot(yData)
+    fmt = ticker.FixedFormatter(map(str, xData))
+    ax = gca()
+    ax.get_xaxis().set_major_formatter(fmt)
+    ax.set_ylabel("Sequential 4K block write latency (s)")
+    ax.set_xlabel("Depth (number of parent directories)")
+    ax.get_yaxis().grid(color='gray', linestyle='dashed')
+    ax.get_yaxis().set_major_locator(ticker.MaxNLocator(10))
+    title('Backend: DynamoDB; Provisioning Units = %d' % writeUnits)
+    pylab.ylim([0,0.1])
+    
+    pylab.show()
+
+
 # Code to run for this script:
 #graphPageSizeComparison('seqwrite', 'dynamodb', 1280)
-for b in BENCH_TYPES:
-    graphBackendComparison(b, 4096)
-    savefig(b + '.png')
+#for b in BENCH_TYPES:
+#    graphBackendComparison(b, 4096)
+#    savefig(b + '.png')
+graphDepthComparison('seqwrite')
