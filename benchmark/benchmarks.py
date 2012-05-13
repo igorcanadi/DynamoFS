@@ -234,7 +234,8 @@ def runDynamoDB_Depth(fileSize, maxDepth=15):
     results = list()
     
     for depth in range(0, maxDepth + 1):
-        results.append(runAllWithFs(fsClass, depth, fileSize, "dynamodb", NUM_TRIALS))
+        print "Depth = " + str(depth)
+        results += (runAllWithFs(fsClass, depth, fileSize, "dynamodb", NUM_TRIALS))
     return results
 
 # Runs all four benchmarks on SimpleDB.
