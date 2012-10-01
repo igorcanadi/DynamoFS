@@ -11,3 +11,8 @@ sqlite.db
 test/data/fs_root.txt
 test/data/server_stub_backup.dat
 *.class
+.DS_Store
+*/.DS_Store
+*/*/.DS_Store
+*/*/*/.DS_Store
+*/*/*/*/.DS_Store
